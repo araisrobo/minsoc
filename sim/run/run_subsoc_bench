@@ -1,0 +1,2 @@
+#!/bin/sh
+vvp -M ../../bench/verilog/vpi/ -mjp-io-vpi subsoc_bench +file_name=$1

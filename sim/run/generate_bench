@@ -1,2 +1,3 @@
 #!/bin/sh
 iverilog -c ../bin/minsoc_model.txt -o minsoc_bench
+iverilog -c ../bin/subsoc_model.txt -o subsoc_bench

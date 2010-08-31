@@ -10,8 +10,9 @@ MEMORY
 MEMORY
 	{
 	reset	: ORIGIN = 0x00000000, LENGTH = 0x00000200
-	vectors : ORIGIN = 0x00000200, LENGTH = 0x00001000
-    ram     : ORIGIN = 0x00001200, LENGTH = 0x00006E00  /*0x8000 total*/
+	vectors : ORIGIN = 0x00000200, LENGTH = 0x00000F00
+        ram     : ORIGIN = 0x00001100, LENGTH = 0x00002F00 /*0x4000(16KB) total*/
+        /* ram     : ORIGIN = 0x00001200, LENGTH = 0x00006E00 */ /*0x8000 total*/
 	}
 
 SECTIONS

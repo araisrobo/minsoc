@@ -1,6 +1,6 @@
 //
+// Currently, it's for Xilinx SPARTAN3 FPGA only
 // Define FPGA manufacturer
-//
 //`define GENERIC_FPGA
 //`define ALTERA_FPGA
 `define XILINX_FPGA
@@ -26,40 +26,10 @@
 				//the memory data width is 32 bit, memory amount in Bytes = 4*memory depth
 
 //
-// Memory type	(uncomment something if ASIC or generic memory)
-//
-//`define GENERIC_MEMORY
-//`define AVANT_ATP
-//`define VIRAGE_SSP
-//`define VIRTUALSILICON_SSP
-
-
-//
 // TAP selection
 //
 //`define GENERIC_TAP
 `define FPGA_TAP
-
-//
-// Clock Division selection
-//
-//`define NO_CLOCK_DIVISION
-//`define GENERIC_CLOCK_DIVISION
-`define FPGA_CLOCK_DIVISION	//Altera ALTPLL is not implemented, didn't find the code for its verilog instantiation
-				//if you selected altera and this, the GENERIC_CLOCK_DIVISION will be automatically taken
-
-//
-// Define division
-//
-`define CLOCK_DIVISOR 2		//in case of GENERIC_CLOCK_DIVISION the real value will be rounded down to an even value
-				//in FPGA case, check minsoc_clock_manager for allowed divisors
-				//DO NOT USE CLOCK_DIVISOR = 1 COMMENT THE CLOCK DIVISION SELECTION INSTEAD
-
-//
-// Reset polarity
-//
-//`define NEGATIVE_RESET      //rstn
-`define POSITIVE_RESET      //rst
 
 //
 // Start-up circuit (only necessary later to load firmware automatically from SPI memory)
@@ -70,13 +40,6 @@
 // Connected modules
 //
 `define UART
-//`define ETHERNET
-
-//
-// Ethernet reset
-//
-//`define ETH_RESET 	1'b0
-`define ETH_RESET	1'b1
 
 //
 // Interrupts
@@ -103,15 +66,3 @@
 `define APP_ADDR_PS2	`APP_ADDR_DEC_W'h94
 `define APP_ADDR_RES1	`APP_ADDR_DEC_W'h9e
 `define APP_ADDR_RES2	`APP_ADDR_DEC_W'h9f
-
-//
-// Set-up GENERIC_TAP, GENERIC_MEMORY if GENERIC_FPGA was chosen
-// and GENERIC_CLOCK_DIVISION if NO_CLOCK_DIVISION was not set
-//
-`ifdef GENERIC_FPGA
-	`define GENERIC_TAP
-	`define GENERIC_MEMORY
-	`ifndef NO_CLOCK_DIVISION
-		`define GENERIC_CLOCK_DIVISION
-	`endif
-`endif

@@ -1660,14 +1660,23 @@ assign t7_out = req_t[7] ? i0_in : {`TC_IIN_W{1'b0}};
 // which target is accessed. If there is no request for a target,
 // assign zeros.
 //
-assign i0_out = req_t[0] ? t0_in :
-		req_t[1] ? t1_in :
-		req_t[2] ? t2_in :
-		req_t[3] ? t3_in :
-		req_t[4] ? t4_in :
-		req_t[5] ? t5_in :
-		req_t[6] ? t6_in :
-		req_t[7] ? t7_in : {`TC_TIN_W{1'b0}};
+//orig: assign i0_out = req_t[0] ? t0_in :
+//orig: 		req_t[1] ? t1_in :
+//orig: 		req_t[2] ? t2_in :
+//orig: 		req_t[3] ? t3_in :
+//orig: 		req_t[4] ? t4_in :
+//orig: 		req_t[5] ? t5_in :
+//orig: 		req_t[6] ? t6_in :
+//orig: 		req_t[7] ? t7_in : {`TC_TIN_W{1'b0}};
+
+assign i0_out = t0_wb_ack_i ? t0_in :
+		t1_wb_ack_i ? t1_in :
+		t2_wb_ack_i ? t2_in :
+		t3_wb_ack_i ? t3_in :
+		t4_wb_ack_i ? t4_in :
+		t5_wb_ack_i ? t5_in :
+		t6_wb_ack_i ? t6_in :
+		t7_wb_ack_i ? t7_in : {`TC_TIN_W{1'b0}};
 
 //
 // Determine which target is being accessed.
