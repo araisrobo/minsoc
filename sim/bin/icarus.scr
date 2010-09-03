@@ -1,0 +1,20 @@
+// This file should be processed by the Makefile before being used
++incdir+.
++incdir+$BENCH_DIR
++incdir+$BENCH_DIR/vpi
++incdir+$RTL_DIR
++incdir+$RTL_DIR/or1200/rtl/verilog
++incdir+$RTL_DIR/components/uusb
+
+-y $BENCH_DIR
+-y $BENCH_DIR/vpi
+-y $RTL_DIR
+-y $RTL_DIR/or1200/rtl/verilog
+-y $RTL_DIR/components/uusb
+
++libext+.v
+
+// RTL files (top)
+$BENCH_DIR/subsoc_bench.v
+
++file_name=flash.in

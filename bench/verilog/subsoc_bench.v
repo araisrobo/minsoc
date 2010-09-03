@@ -23,6 +23,8 @@ wire [1:0] spi_ss;
 //UART wires
 wire uart_stx;
 reg uart_srx;
+wire [7:0] uusb_dat_o;
+wire [7:0] uusb_dat_i;
 
 //
 // Testbench mechanics
@@ -38,8 +40,9 @@ initial begin
 
     uart_srx = 1'b1;
     
-    //dual and two port rams from FPGA memory instances have to be initialized to 0
-    init_fpga_memory();
+    //dual and two port rams from FPGA memory instances have to be
+    //initialized to 0
+    init_fpga_memory;
 
     load_file = 1'b0;
 `ifdef INITIALIZE_MEMORY_MODEL 
@@ -134,8 +137,10 @@ subsoc_top subsoc_top_0(
    //UART ports
 `ifdef UART
    , 
-   .uart_stx(uart_stx),
-   .uart_srx(uart_srx)
+   // .uart_stx(uart_stx),
+   // .uart_srx(uart_srx)
+   .uusb_dat_o (uusb_dat_o),
+   .uusb_dat_i (uusb_dat_i)
 `endif // !UART
 
 );
@@ -163,12 +168,20 @@ always begin
     #((`CLK_PERIOD)/2) clock <= ~clock;
 end
 
-`ifdef VCD_OUTPUT
 initial begin
-	$dumpfile("../results/subsoc_wave.vcd");
-	$dumpvars();
-end
+        $display("\nStarting RTL simulation of %s test\n", `TEST_NAME_STRING);
+`ifdef VCD
+	// $dumpfile("../results/subsoc_wave.vcd");
+	// $dumpvars();
+        // $display("VCD in %s\n", {`TEST_RESULTS_DIR,`TEST_NAME_STRING,".vcd"});
+        // $dumpfile({`TEST_RESULTS_DIR,`TEST_NAME_STRING,".vcd"});
+        // $dumpvars(0);
+        // //TODO: waveform dump based on simulation parameter
+        $display("VCD in %s\n", {`TEST_RESULTS_DIR,`TEST_NAME_STRING,".shm"});
+        $shm_open ({`TEST_RESULTS_DIR,`TEST_NAME_STRING,".shm"}, , , 0, 100, 20);
+        $shm_probe("AMC");  // dump all levels from initial;
 `endif
+end
 
 
 //

@@ -74,6 +74,14 @@ wire			wb_rim_we_o;
 wire			wb_rim_stb_o;
 wire	[31:0]		wb_rif_dat_i;
 wire			wb_rif_ack_i;
+`ifdef OR1200_WB_CAB
+wire  			wb_rim_cab;	// indicates consecutive address burst
+`endif
+`ifdef OR1200_WB_B3
+wire  	[2:0]		wb_rim_cti;	// cycle type identifier
+wire  	[1:0]		wb_rim_bte;	// burst type extension
+`endif
+
 
 //
 // RISC data master i/f wires
@@ -88,11 +96,20 @@ wire			wb_rdm_err_i;
 wire			wb_rdm_rty_i = 1'b0;
 wire			wb_rdm_we_o;
 wire			wb_rdm_stb_o;
+`ifdef OR1200_WB_CAB
+wire   		        wb_rdm_cab;	// indicates consecutive address burst
+`endif
+`ifdef OR1200_WB_B3
+wire  	[2:0]		wb_rdm_cti;	// cycle type identifier
+wire  	[1:0]		wb_rdm_bte;	// burst type extension
+`endif
+
 
 //
 // RISC misc
 //
 wire	[`OR1200_PIC_INTS-1:0]		pic_ints;
+wire                                    sig_tick;
 
 //
 // Flash controller slave i/f wires
@@ -323,6 +340,13 @@ or1200_top or1200_top (
 	.iwb_rty_i	( wb_rim_rty_i ),
 	.iwb_we_o	( wb_rim_we_o  ),
 	.iwb_stb_o	( wb_rim_stb_o ),
+`ifdef OR1200_WB_CAB
+	.iwb_cab_o      ( wb_rim_cab   ),
+`endif
+`ifdef OR1200_WB_B3
+	.iwb_cti_o      ( wb_rim_cti   ),
+        .iwb_bte_o      ( wb_rim_bte   ),
+`endif
 
 	// WISHBONE Data Master
 	.dwb_clk_i	( wb_clk ),
@@ -337,6 +361,13 @@ or1200_top or1200_top (
 	.dwb_rty_i	( wb_rdm_rty_i ),
 	.dwb_we_o	( wb_rdm_we_o  ),
 	.dwb_stb_o	( wb_rdm_stb_o ),
+`ifdef OR1200_WB_CAB
+	.dwb_cab_o      ( wb_rdm_cab   ),
+`endif
+`ifdef OR1200_WB_B3
+	.dwb_cti_o      ( wb_rdm_cti   ),
+        .dwb_bte_o      ( wb_rdm_bte   ),
+`endif
 
 	// Debug
 	.dbg_stall_i	( dbg_stall ),
@@ -365,7 +396,8 @@ or1200_top or1200_top (
 	.pm_lvolt_o	( ),
 
 	// Interrupts
-	.pic_ints_i	( pic_ints )
+	.pic_ints_i	( pic_ints ),
+        .sig_tick       ( sig_tick )
 );
 
 //

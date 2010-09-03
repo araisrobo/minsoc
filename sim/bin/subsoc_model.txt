@@ -7,7 +7,8 @@
 +incdir+../../rtl/verilog/adv_debug_sys/Hardware/adv_dbg_if/rtl/verilog
 +incdir+../../rtl/verilog/adv_debug_sys/Hardware/jtag/tap/rtl/verilog
 +incdir+../../rtl/verilog/adv_debug_sys/Software/adv_jtag_bridge/sim_rtl
-+incdir+../../rtl/verilog/uart16550/rtl/verilog
+# +incdir+../../rtl/verilog/uart16550/rtl/verilog
++incdir+../../rtl/verilog/uusb/rtl/verilog
 ../../bench/verilog/subsoc_bench_defines.v
 ../../bench/verilog/subsoc_bench.v
 # ../../bench/verilog/subsoc_memory_model.v
@@ -100,14 +101,16 @@
 ../../rtl/verilog/adv_debug_sys/Hardware/adv_dbg_if/rtl/verilog/adbg_top.v
 ../../rtl/verilog/adv_debug_sys/Hardware/jtag/tap/rtl/verilog/tap_top.v
 ../../rtl/verilog/adv_debug_sys/Hardware/jtag/tap/rtl/verilog/tap_defines.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_top.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_sync_flops.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_transmitter.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_debug_if.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_wb.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_receiver.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_tfifo.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_regs.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_rfifo.v
-../../rtl/verilog/uart16550/rtl/verilog/uart_defines.v
-../../rtl/verilog/uart16550/rtl/verilog/raminfr.v
+../../rtl/verilog/uusb/rtl/verilog/uusb_top.v
+../../rtl/verilog/uusb/rtl/verilog/uusb_defines.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_top.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_sync_flops.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_transmitter.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_debug_if.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_wb.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_receiver.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_tfifo.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_regs.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_rfifo.v
+# ../../rtl/verilog/uart16550/rtl/verilog/uart_defines.v
+# ../../rtl/verilog/uart16550/rtl/verilog/raminfr.v

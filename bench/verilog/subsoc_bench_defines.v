@@ -17,12 +17,22 @@
 
 `define UART_BAUDRATE 115200
 
-`define VPI_DEBUG
+// `define VPI_DEBUG
 
-//`define VCD_OUTPUT
+// `define VCD_OUTPUT -> `define VCD
 
-//`define START_UP		//pass firmware over spi to or1k_startup
+// `define START_UP		//pass firmware over spi to or1k_startup
 
 `define INITIALIZE_MEMORY_MODEL //instantaneously initialize memory model with firmware
 				//only use with the memory model (it is safe to 
 				//comment this and include the original memory instead)
+
+// The SUBSoC tests makefile should generate the test_define.v file in
+// the sim/run directory.
+`ifdef TEST_DEFINE_FILE
+ `include "test_define.v"
+`else
+ `define TEST_NAME_STRING "unspecified-test"
+ `define TEST_RESULTS_DIR "./"
+`endif
+

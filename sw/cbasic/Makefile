@@ -13,6 +13,7 @@ sim: $(cases)
 # cbasic-nocache-O0: cbasic-O0.o ../support/reset-nocache.o $(common)
 cbasic-nocache-O0: cbasic-O0.o
 	# $(OR32_TOOL_PREFIX)-gcc $(GCC_OPT) -T ../support/orp.ld $? -o $@.or32 $(GCC_LIB_OPTS) 
+	# $(OR32_TOOL_PREFIX)-gcc --verbose $(GCC_OPT) $? -o $@.or32 -Wl,-u,free $(GCC_LIB_OPTS) 
 	$(OR32_TOOL_PREFIX)-gcc --verbose $(GCC_OPT) $? -o $@.or32 $(GCC_LIB_OPTS) 
 	$(OR32_TOOL_PREFIX)-objcopy  -O binary $@.or32 $@.bin
 	../utils/bin2hex $@.bin 1 -size_word > $@$(FLASH_MEM_HEX_FILE_SUFFIX).hex
