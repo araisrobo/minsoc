@@ -26,6 +26,12 @@ reg uart_srx;
 wire [7:0] uusb_dat_o;
 wire [7:0] uusb_dat_i;
 
+// SFIFO_IF wires
+wire          sfifo_rd_o;
+wire          sfifo_empty_i;
+wire [15:0]   sfifo_di;
+wire          sfifo_bp_tick_i;
+
 //
 // Testbench mechanics
 //
@@ -143,6 +149,17 @@ subsoc_top subsoc_top_0(
    .uusb_dat_i (uusb_dat_i)
 `endif // !UART
 
+//
+// SFIFO_IF (sync fofo interface)
+//
+`ifdef SFIFO_IF
+    ,
+    .sfifo_rd_o         (sfifo_rd_o),
+    .sfifo_empty_i      (sfifo_empty_i),
+    .sfifo_di           (sfifo_di),
+    .sfifo_bp_tick_i    (sfifo_bp_tick_i)
+`endif
+
 );
 
 `ifdef VPI_DEBUG
@@ -202,6 +219,15 @@ task send_spi;
 endtask
 `endif
 //~SPI START_UP
+
+//
+// SFIFO_IF
+//
+`ifdef SFIFO_IF
+assign  sfifo_empty_i = 1;
+assign  sfifo_di = 16'b0;
+assign  sfifo_bp_tick_i = 0;
+`endif // SFIFO_IF
 
 //UART
 `ifdef UART

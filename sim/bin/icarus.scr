@@ -5,12 +5,14 @@
 +incdir+$RTL_DIR
 +incdir+$RTL_DIR/or1200/rtl/verilog
 +incdir+$RTL_DIR/components/uusb
++incdir+$RTL_DIR/components/sfifo_if
 
 -y $BENCH_DIR
 -y $BENCH_DIR/vpi
 -y $RTL_DIR
 -y $RTL_DIR/or1200/rtl/verilog
 -y $RTL_DIR/components/uusb
+-y $RTL_DIR/components/sfifo_if
 
 +libext+.v
 

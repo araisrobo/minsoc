@@ -40,6 +40,7 @@
 // Connected modules
 //
 `define UART
+`define SFIFO_IF
 
 //
 // Interrupts
@@ -61,7 +62,7 @@
 `define APP_ADDR_PERIP  `APP_ADDR_DECP_W'h9
 `define APP_ADDR_SPI	`APP_ADDR_DEC_W'h97
 `define APP_ADDR_ETH	`APP_ADDR_DEC_W'h92
-`define APP_ADDR_AUDIO	`APP_ADDR_DEC_W'h9d
+`define APP_ADDR_SFIFO	`APP_ADDR_DEC_W'h9d
 `define APP_ADDR_UART	`APP_ADDR_DEC_W'h90
 `define APP_ADDR_PS2	`APP_ADDR_DEC_W'h94
 `define APP_ADDR_RES1	`APP_ADDR_DEC_W'h9e

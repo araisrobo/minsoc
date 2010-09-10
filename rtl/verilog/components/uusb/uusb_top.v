@@ -174,6 +174,7 @@ input 	[7:0]			uusb_dat_i;
 
 // assign uusb_dat_o = wb_dat_i[7:0];
 // assign wb_dat_o[7:0] = uusb_dat_i;
+assign wb_ack_o = 0;
 
 always @ (posedge wb_clk_i)
   if (wb_rst_i)

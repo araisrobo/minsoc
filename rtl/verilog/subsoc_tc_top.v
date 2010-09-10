@@ -94,7 +94,7 @@
 //
 // Traffic Cop Top
 //
-module minsoc_tc_top (
+module subsoc_tc_top (
 	wb_clk_i,
 	wb_rst_i,
 
@@ -912,3 +912,4 @@ tc_si_to_mt #(t1_addr_w, t1_addr, t28i_addr_w, t2_addr, t3_addr,
 );
 
 endmodule
+

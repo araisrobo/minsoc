@@ -1,19 +1,23 @@
 `include "subsoc_defines.v"
 `include "or1200_defines.v"
 
-module subsoc_top (
-  input         clk,
-  input         reset
+module subsoc_top 
+#(
+  parameter           SFIFO_DW        = 16    // data width for SYNC_FIFO
+)
+(
+  input               clk,
+  input               reset
 
   //
   // SPI controller external i/f wires
   //
 `ifdef START_UP
   ,
-  output spi_flash_mosi,
-  input spi_flash_miso,
-  output spi_flash_sclk,
-  output [1:0] spi_flash_ss
+  output              spi_flash_mosi,
+  input               spi_flash_miso,
+  output              spi_flash_sclk,
+  output [1:0]        spi_flash_ss
 `endif
 
 //
@@ -21,8 +25,19 @@ module subsoc_top (
 //
 `ifdef UART
   ,
-  output [7:0]  uusb_dat_o,
-  input  [7:0]  uusb_dat_i 
+  output [7:0]        uusb_dat_o,
+  input  [7:0]        uusb_dat_i 
+`endif
+
+//
+// SFIFO_IF (sync fofo interface)
+//
+`ifdef SFIFO_IF
+  ,
+  output                    sfifo_rd_o,
+  input                     sfifo_empty_i,
+  input   [SFIFO_DW-1:0]    sfifo_di,
+  input                     sfifo_bp_tick_i
 `endif
 );
 
@@ -204,6 +219,19 @@ wire			wb_us_ack_o;
 wire			wb_us_err_o;
 
 //
+// SFIFO_IF slave i/f wires (sfifoS: sfifo Slave)
+//
+wire	[31:0]		wb_sfifos_dat_i;
+wire	[31:0]		wb_sfifos_dat_o;
+wire	[31:0]		wb_sfifos_adr_i;
+wire	[3:0]		wb_sfifos_sel_i;
+wire			wb_sfifos_we_i;
+wire			wb_sfifos_cyc_i;
+wire			wb_sfifos_stb_i;
+wire			wb_sfifos_ack_o;
+wire			wb_sfifos_err_o;
+
+//
 // Global clock
 //
 wire			wb_clk;
@@ -218,6 +246,7 @@ assign wb_rst = reset;
 assign wb_us_err_o = 1'b0;
 assign wb_fs_err_o = 1'b0;
 assign wb_sp_err_o = 1'b0;
+assign wb_sfifos_err_o = 1'b0;
 
 //
 // Unused interrupts
@@ -471,6 +500,43 @@ onchip_ram_top (
 );
 
 //
+// Instantiation of the SFIFO_IF
+//
+`ifdef SFIFO_IF
+sfifo_if_top #(
+        .WB_LAW         ( 5         ),  // lower address bits
+        .WB_DW          ( 32        ),
+        .SFIFO_DW       ( SFIFO_DW  )   // data width for SYNC_FIFO
+) sfifo_if_top (
+
+	// WISHBONE common
+	.wb_clk_i	( wb_clk ), 
+	.wb_rst_i	( wb_rst ),
+
+	// WISHBONE slave
+	.wb_adr_i	( wb_sfifos_adr_i[4:0] ),
+	.wb_dat_i	( wb_sfifos_dat_i      ),
+	.wb_dat_o	( wb_sfifos_dat_o      ),
+	.wb_we_i	( wb_sfifos_we_i       ),
+	.wb_stb_i	( wb_sfifos_stb_i      ),
+	.wb_cyc_i	( wb_sfifos_cyc_i      ),
+	.wb_ack_o	( wb_sfifos_ack_o      ),
+	.wb_sel_i	( wb_sfifos_sel_i      ),
+  
+        // SFIFO Interface (clk_500)
+        .sfifo_rd_o     ( sfifo_rd_o          ),
+        .sfifo_empty_i  ( sfifo_empty_i       ),
+        .sfifo_di       ( sfifo_di            ),
+
+        // SFIFO_CTRL Interface (clk_250)
+        .sfifo_bp_tick_i ( sfifo_bp_tick_i      )
+);
+`else
+assign wb_sfifos_dat_o = 32'h0000_0000;
+assign wb_sfifos_ack_o = 1'b0;
+`endif
+
+//
 // Instantiation of the UART16550
 //
 `ifdef UART
@@ -607,20 +673,21 @@ assign pic_ints[`APP_INT_ETH] = 1'b0;
 //
 // Instantiation of the Traffic COP
 //
-minsoc_tc_top #(`APP_ADDR_DEC_W,
-	 `APP_ADDR_SRAM,
-	 `APP_ADDR_DEC_W,
-	 `APP_ADDR_FLASH,
-	 `APP_ADDR_DECP_W,
-	 `APP_ADDR_PERIP,
-	 `APP_ADDR_DEC_W,
-	 `APP_ADDR_SPI,
-	 `APP_ADDR_ETH,
-	 `APP_ADDR_AUDIO,
-	 `APP_ADDR_UART,
-	 `APP_ADDR_PS2,
-	 `APP_ADDR_RES1,
-	 `APP_ADDR_RES2
+subsoc_tc_top #(
+          .t0_addr_w    ( `APP_ADDR_DEC_W   ),
+	  .t0_addr      ( `APP_ADDR_SRAM    ),
+	  .t1_addr_w    ( `APP_ADDR_DEC_W   ),
+	  .t1_addr      ( `APP_ADDR_FLASH   ),
+	  .t28c_addr_w  ( `APP_ADDR_DECP_W  ),
+	  .t28_addr     ( `APP_ADDR_PERIP   ),
+	  .t28i_addr_w  ( `APP_ADDR_DEC_W   ),
+	  .t2_addr      ( `APP_ADDR_SPI     ),
+	  .t3_addr      ( `APP_ADDR_ETH     ),
+	  .t4_addr      ( `APP_ADDR_SFIFO   ),
+	  .t5_addr      ( `APP_ADDR_UART    ),
+	  .t6_addr      ( `APP_ADDR_PS2     ),
+	  .t7_addr      ( `APP_ADDR_RES1    ),
+	  .t8_addr      ( `APP_ADDR_RES2    )
 	) tc_top (
 
 	// WISHBONE common
@@ -715,7 +782,7 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.i7_wb_ack_o	( ),
 	.i7_wb_err_o	( ),
 
-	// WISHBONE Target 0 (ss: sram controller)
+	// WISHBONE Target 0 (ss: sram controller, 0x00)
 	.t0_wb_cyc_o	( wb_ss_cyc_i ),
 	.t0_wb_stb_o	( wb_ss_stb_i ),
 	.t0_wb_adr_o	( wb_ss_adr_i ),
@@ -726,7 +793,7 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.t0_wb_ack_i	( wb_ss_ack_o ),
 	.t0_wb_err_i	( wb_ss_err_o ),
 
-	// WISHBONE Target 1  (fs: flash start)
+	// WISHBONE Target 1  (fs: flash start, 0x80)
 	.t1_wb_cyc_o	( wb_fs_cyc_i ),
 	.t1_wb_stb_o	( wb_fs_stb_i ),
 	.t1_wb_adr_o	( wb_fs_adr_i ),
@@ -737,7 +804,7 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.t1_wb_ack_i	( wb_fs_ack_o ),
 	.t1_wb_err_i	( wb_fs_err_o ),
 
-	// WISHBONE Target 2  (sp: spi flash)
+	// WISHBONE Target 2  (sp: spi flash, 0x90)
 	.t2_wb_cyc_o	( wb_sp_cyc_i ),
 	.t2_wb_stb_o	( wb_sp_stb_i ),
 	.t2_wb_adr_o	( wb_sp_adr_i ),
@@ -748,7 +815,7 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.t2_wb_ack_i	( wb_sp_ack_o ),
 	.t2_wb_err_i	( wb_sp_err_o ),
 
-	// WISHBONE Target 3  (es: ethernet slave)
+	// WISHBONE Target 3  (es: ethernet slave, 0xa0)
 	.t3_wb_cyc_o	( wb_es_cyc_i ),
 	.t3_wb_stb_o	( wb_es_stb_i ),
 	.t3_wb_adr_o	( wb_es_adr_i ),
@@ -759,18 +826,18 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.t3_wb_ack_i	( wb_es_ack_o ),
 	.t3_wb_err_i	( wb_es_err_o ),
 
-	// WISHBONE Target 4
-	.t4_wb_cyc_o	( ),
-	.t4_wb_stb_o	( ),
-	.t4_wb_adr_o	( ),
-	.t4_wb_sel_o	( ),
-	.t4_wb_we_o	( ),
-	.t4_wb_dat_o	( ),
-	.t4_wb_dat_i	( 32'h0000_0000 ),
-	.t4_wb_ack_i	( 1'b0 ),
-	.t4_wb_err_i	( 1'b1 ),
+	// WISHBONE Target 4 (sfifos: sync fifo slave, 0xb0)
+	.t4_wb_cyc_o	( wb_sfifos_cyc_i ),
+	.t4_wb_stb_o	( wb_sfifos_stb_i ),
+	.t4_wb_adr_o	( wb_sfifos_adr_i ),
+	.t4_wb_sel_o	( wb_sfifos_sel_i ),
+	.t4_wb_we_o	( wb_sfifos_we_i  ),
+	.t4_wb_dat_o	( wb_sfifos_dat_i ),
+	.t4_wb_dat_i	( wb_sfifos_dat_o ),
+	.t4_wb_ack_i	( wb_sfifos_ack_o ),
+	.t4_wb_err_i	( wb_sfifos_err_o ),
 	
-	// WISHBONE Target 5
+	// WISHBONE Target 5 (0xc0)
 	.t5_wb_cyc_o	( wb_us_cyc_i ),
 	.t5_wb_stb_o	( wb_us_stb_i ),
 	.t5_wb_adr_o	( wb_us_adr_i ),
@@ -781,7 +848,7 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.t5_wb_ack_i	( wb_us_ack_o ),
 	.t5_wb_err_i	( wb_us_err_o ),
 
-	// WISHBONE Target 6
+	// WISHBONE Target 6 (0xd0)
 	.t6_wb_cyc_o	( ),
 	.t6_wb_stb_o	( ),
 	.t6_wb_adr_o	( ),
@@ -792,7 +859,7 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.t6_wb_ack_i	( 1'b0 ),
 	.t6_wb_err_i	( 1'b1 ),
 
-	// WISHBONE Target 7
+	// WISHBONE Target 7 (0xe0)
 	.t7_wb_cyc_o	( ),
 	.t7_wb_stb_o	( ),
 	.t7_wb_adr_o	( ),
@@ -803,7 +870,7 @@ minsoc_tc_top #(`APP_ADDR_DEC_W,
 	.t7_wb_ack_i	( 1'b0 ),
 	.t7_wb_err_i	( 1'b1 ),
 
-	// WISHBONE Target 8
+	// WISHBONE Target 8 (0xf0)
 	.t8_wb_cyc_o	( ),
 	.t8_wb_stb_o	( ),
 	.t8_wb_adr_o	( ),

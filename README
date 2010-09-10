@@ -1,0 +1,2 @@
+for simulation:
+cd sim/run; make rtl-tests TESTS=sfifo VCD=1
