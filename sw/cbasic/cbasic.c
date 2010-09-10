@@ -203,6 +203,16 @@ int main()
 	signed long result2 = 0;
 	signed long result3 = 0;
 
+#if 0
+        {
+          /* test malloc() and free() */
+          unsigned char *buf;
+          buf = malloc (2048);
+          free (buf);
+        }
+#endif // malloc()
+
+
 // #if DEBUG
 // 	printf("Start...\n");
 // #endif

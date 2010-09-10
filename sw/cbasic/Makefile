@@ -1,7 +1,6 @@
 include ../support/Makefile.inc
 
-cases = cbasic-nocache-O0 
-	# cbasic-nocache-O2 
+cases = cbasic-nocache-O0 cbasic-nocache-O2 
 
 # common = ../support/except.o ../support/libsupport.a 
 
@@ -20,8 +19,10 @@ cbasic-nocache-O0: cbasic-O0.o
 	../utils/bin2vmem $@.bin > $@.vmem
 
 
-cbasic-nocache-O2: cbasic-O2.o ../support/reset-nocache.o
-	$(OR32_TOOL_PREFIX)-gcc $(GCC_OPT) $(GCC_LIB_OPTS) -T ../support/orp.ld $? -o $@.or32 $(common)
+# cbasic-nocache-O2: cbasic-O2.o ../support/reset-nocache.o
+	# $(OR32_TOOL_PREFIX)-gcc $(GCC_OPT) $(GCC_LIB_OPTS) -T ../support/orp.ld $? -o $@.or32 $(common)
+cbasic-nocache-O2: cbasic-O2.o
+	$(OR32_TOOL_PREFIX)-gcc --verbose $(GCC_OPT) $? -o $@.or32 $(GCC_LIB_OPTS) 
 	$(OR32_TOOL_PREFIX)-objcopy  -O binary $@.or32 $@.bin
 	../utils/bin2hex $@.bin 1 -size_word > $@$(FLASH_MEM_HEX_FILE_SUFFIX).hex
 	../utils/bin2vmem $@.bin > $@.vmem

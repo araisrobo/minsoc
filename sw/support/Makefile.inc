@@ -3,11 +3,12 @@
 OR32_TOOL_PREFIX=or32-elf
 
 # GCC_LIB_OPTS= -lgcc -liberty
+GCC_LIB_OPTS=-lgcc -lm -lc
 
 # GCC_OPT=-mhard-mul -g 
 # GCC_OPT=-msoft-mul -g 
 #for newlib: 
-GCC_OPT=-msoft-mul -mor32-newlib
+GCC_OPT=-g -O2 -mhard-mul -msoft-div -mor32-newlib
 
 ifdef UART_PRINTF
 GCC_OPT += -DUART_PRINTF
