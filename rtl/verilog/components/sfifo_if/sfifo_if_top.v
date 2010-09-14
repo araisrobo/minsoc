@@ -35,7 +35,7 @@ module sfifo_if_top
   input                               wb_stb_i,
 
   // SFIFO Interface (clk_500)
-  output                              sfifo_rd_o,
+  output  reg                         sfifo_rd_o,
   input                               sfifo_empty_i,
   input   [SFIFO_DW-1:0]              sfifo_di,
 
@@ -54,7 +54,7 @@ assign bp_tick_sel  = wb_cyc_i & wb_stb_i & (wb_adr_i[`SFIFO_OFS_BITS] == `SFIFO
 assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[`SFIFO_OFS_BITS] == `SFIFO_DI);
    
 // Wb acknowledge
-always @(posedge wb_clk_i or posedge wb_rst_i)
+always @(posedge wb_clk_i)
 begin
   if (wb_rst_i)
     wb_ack_o <= 1'b0;
@@ -66,7 +66,7 @@ end
    
 // Read from registers
 // Wb data out
-always @(posedge wb_clk_i or posedge wb_rst_i)
+always @(posedge wb_clk_i)
 begin
   if (wb_rst_i)
     wb_dat_o <= 32'b0;
@@ -78,6 +78,12 @@ begin
       default:          wb_dat_o  <= 'bx;
     endcase
 end
+
+always @(posedge wb_clk_i)
+  if (wb_rst_i)
+    sfifo_rd_o <= 0;
+  else
+    sfifo_rd_o <= sfifo_di_sel & (~sfifo_empty_i);
 
 // sync from clk_250 to clk_500
 always @ (posedge wb_clk_i)
