@@ -1,8 +1,3 @@
-// for CFRD_DECODE: 
-`define SYNC_JNT            3'b00?
-`define SYNC_DOUT           3'b010
-`define SYNC_DI             3'b011
-
 //
 // Bits of WISHBONE address used for partial decoding of SPI registers.
 //
@@ -44,7 +39,9 @@ module sfifo_if_top
 );
 
 reg               sfifo_bp_tick_s;
-reg               bp_tick;
+wire              bp_pulser;
+reg               bp_tick_n;
+reg [WB_DW-1:0]   bp_tick_cnt;
 wire              bp_tick_sel;
 
 wire              sfifo_di_sel;
@@ -72,7 +69,7 @@ begin
     wb_dat_o <= 32'b0;
   else
     case (wb_adr_i[`SFIFO_OFS_BITS])  // synopsys parallel_case
-      `SFIFO_BP_TICK:   wb_dat_o  <= {31'd0, bp_tick};
+      `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
       `SFIFO_CTRL:      wb_dat_o  <= {31'd0, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {16'd0, sfifo_di}; 
       default:          wb_dat_o  <= 'bx;
@@ -87,12 +84,23 @@ always @(posedge wb_clk_i)
 
 // sync from clk_250 to clk_500
 always @ (posedge wb_clk_i)
-  sfifo_bp_tick_s <= sfifo_bp_tick_i;
+  if (wb_rst_i)
+    sfifo_bp_tick_s <= 0;
+  else 
+    sfifo_bp_tick_s <= sfifo_bp_tick_i;
+
+// pulser for bp_tick
+assign bp_pulser = sfifo_bp_tick_s & bp_tick_n;
+always @ (posedge wb_clk_i)
+  if (wb_rst_i)
+    bp_tick_n <= 1;
+  else
+    bp_tick_n <= ~sfifo_bp_tick_s;
 
 always @ (posedge wb_clk_i)
-  if (wb_rst_i | (bp_tick & bp_tick_sel))
-    bp_tick <= 0;
-  else if (sfifo_bp_tick_s)
-    bp_tick <= 1;
+  if (wb_rst_i)
+    bp_tick_cnt <= 0;
+  else if (bp_pulser)
+    bp_tick_cnt <= bp_tick_cnt + 1;
 
 endmodule
