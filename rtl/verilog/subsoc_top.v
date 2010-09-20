@@ -3,7 +3,9 @@
 
 module subsoc_top 
 #(
-  parameter           SFIFO_DW        = 16    // data width for SYNC_FIFO
+  parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
+  parameter           WB_SSIF_AW      = 0,
+  parameter           WB_DW           = 0
 )
 (
   input               clk,
@@ -39,6 +41,24 @@ module subsoc_top
   input   [SFIFO_DW-1:0]    sfifo_di,
   input                     sfifo_bp_tick_i
 `endif
+
+//
+// SSIF (Servo/Stepper InterFace)
+//
+`ifdef SSIF
+  ,
+  // WISHBONE Interface 1
+  output                    wb_ssif_stb_o,
+  output                    wb_ssif_cyc_o,
+  output  [WB_SSIF_AW-1:2]  wb_ssif_adr_o,
+  output  [WB_DW-1:0]       wb_ssif_dat_o,
+  output  [WB_DW/8-1:0]     wb_ssif_sel_o,
+  output                    wb_ssif_we_o,
+  input   [WB_DW-1:0]       wb_ssif_dat_i,
+  input                     wb_ssif_ack_i,
+  input                     wb_ssif_err_i
+`endif
+
 );
 
 //
@@ -231,6 +251,9 @@ wire			wb_sfifos_stb_i;
 wire			wb_sfifos_ack_o;
 wire			wb_sfifos_err_o;
 
+// SSIF
+wire    [31:0]          wb_ssif_adr;
+
 //
 // Global clock
 //
@@ -255,6 +278,10 @@ assign pic_ints[`APP_INT_RES1] = 'b0;
 assign pic_ints[`APP_INT_RES2] = 'b0;
 assign pic_ints[`APP_INT_RES3] = 'b0;
 assign pic_ints[`APP_INT_PS2] = 'b0;
+  
+
+// SSIF
+assign wb_ssif_adr_o = wb_ssif_adr[WB_SSIF_AW-1:2];
 
 //
 // RISC Instruction address for Flash
@@ -686,7 +713,7 @@ subsoc_tc_top #(
 	  .t4_addr      ( `APP_ADDR_SFIFO   ),
 	  .t5_addr      ( `APP_ADDR_UART    ),
 	  .t6_addr      ( `APP_ADDR_PS2     ),
-	  .t7_addr      ( `APP_ADDR_RES1    ),
+	  .t7_addr      ( `APP_ADDR_SSIF    ),
 	  .t8_addr      ( `APP_ADDR_RES2    )
 	) tc_top (
 
@@ -793,7 +820,7 @@ subsoc_tc_top #(
 	.t0_wb_ack_i	( wb_ss_ack_o ),
 	.t0_wb_err_i	( wb_ss_err_o ),
 
-	// WISHBONE Target 1  (fs: flash start, 0x80)
+	// WISHBONE Target 1  (fs: flash start, 0x04)
 	.t1_wb_cyc_o	( wb_fs_cyc_i ),
 	.t1_wb_stb_o	( wb_fs_stb_i ),
 	.t1_wb_adr_o	( wb_fs_adr_i ),
@@ -804,7 +831,7 @@ subsoc_tc_top #(
 	.t1_wb_ack_i	( wb_fs_ack_o ),
 	.t1_wb_err_i	( wb_fs_err_o ),
 
-	// WISHBONE Target 2  (sp: spi flash, 0x90)
+	// WISHBONE Target 2  (sp: spi flash)
 	.t2_wb_cyc_o	( wb_sp_cyc_i ),
 	.t2_wb_stb_o	( wb_sp_stb_i ),
 	.t2_wb_adr_o	( wb_sp_adr_i ),
@@ -815,7 +842,7 @@ subsoc_tc_top #(
 	.t2_wb_ack_i	( wb_sp_ack_o ),
 	.t2_wb_err_i	( wb_sp_err_o ),
 
-	// WISHBONE Target 3  (es: ethernet slave, 0xa0)
+	// WISHBONE Target 3  (es: ethernet slave)
 	.t3_wb_cyc_o	( wb_es_cyc_i ),
 	.t3_wb_stb_o	( wb_es_stb_i ),
 	.t3_wb_adr_o	( wb_es_adr_i ),
@@ -826,7 +853,7 @@ subsoc_tc_top #(
 	.t3_wb_ack_i	( wb_es_ack_o ),
 	.t3_wb_err_i	( wb_es_err_o ),
 
-	// WISHBONE Target 4 (sfifos: sync fifo slave, 0xb0)
+	// WISHBONE Target 4 (sfifos: sync fifo slave, 0x9d)
 	.t4_wb_cyc_o	( wb_sfifos_cyc_i ),
 	.t4_wb_stb_o	( wb_sfifos_stb_i ),
 	.t4_wb_adr_o	( wb_sfifos_adr_i ),
@@ -837,7 +864,7 @@ subsoc_tc_top #(
 	.t4_wb_ack_i	( wb_sfifos_ack_o ),
 	.t4_wb_err_i	( wb_sfifos_err_o ),
 	
-	// WISHBONE Target 5 (0xc0)
+	// WISHBONE Target 5 (uart slave)
 	.t5_wb_cyc_o	( wb_us_cyc_i ),
 	.t5_wb_stb_o	( wb_us_stb_i ),
 	.t5_wb_adr_o	( wb_us_adr_i ),
@@ -848,7 +875,7 @@ subsoc_tc_top #(
 	.t5_wb_ack_i	( wb_us_ack_o ),
 	.t5_wb_err_i	( wb_us_err_o ),
 
-	// WISHBONE Target 6 (0xd0)
+	// WISHBONE Target 6 ()
 	.t6_wb_cyc_o	( ),
 	.t6_wb_stb_o	( ),
 	.t6_wb_adr_o	( ),
@@ -859,16 +886,16 @@ subsoc_tc_top #(
 	.t6_wb_ack_i	( 1'b0 ),
 	.t6_wb_err_i	( 1'b1 ),
 
-	// WISHBONE Target 7 (0xe0)
-	.t7_wb_cyc_o	( ),
-	.t7_wb_stb_o	( ),
-	.t7_wb_adr_o	( ),
-	.t7_wb_sel_o	( ),
-	.t7_wb_we_o	( ),
-	.t7_wb_dat_o	( ),
-	.t7_wb_dat_i	( 32'h0000_0000 ),
-	.t7_wb_ack_i	( 1'b0 ),
-	.t7_wb_err_i	( 1'b1 ),
+	// WISHBONE Target 7 (ssifs: SSIF Slave, 0x9e)
+	.t7_wb_cyc_o	( wb_ssif_cyc_o ),
+	.t7_wb_stb_o	( wb_ssif_stb_o ),
+	.t7_wb_adr_o	( wb_ssif_adr   ),
+	.t7_wb_sel_o	( wb_ssif_sel_o ),
+	.t7_wb_we_o	( wb_ssif_we_o  ),
+	.t7_wb_dat_o	( wb_ssif_dat_o ),
+	.t7_wb_dat_i	( wb_ssif_dat_i ),
+	.t7_wb_ack_i	( wb_ssif_ack_i ),
+	.t7_wb_err_i	( wb_ssif_err_i ),
 
 	// WISHBONE Target 8 (0xf0)
 	.t8_wb_cyc_o	( ),
