@@ -1,3 +1,9 @@
+// synopsys translate_off
+`include "timescale.v"
+// synopsys translate_on
+
+`include "tc_defines.v"
+
 //
 // Single initiator to multiple targets
 //

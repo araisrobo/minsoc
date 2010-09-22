@@ -1,3 +1,9 @@
+// synopsys translate_off
+`include "timescale.v"
+// synopsys translate_on
+
+`include "tc_defines.v"
+
 //
 // Multiple initiator to single target
 //
@@ -243,7 +249,8 @@ wire	[`TC_TIN_W-1:0]	i0_out, i1_out,
 wire	[`TC_IIN_W-1:0]	t0_out;
 wire	[`TC_TIN_W-1:0]	t0_in;
 wire	[7:0]		req_i;
-wire	[2:0]		req_won;
+// wire	[2:0]		req_won;
+reg     [2:0]		req_won;
 reg			req_cont;
 reg	[2:0]		req_r;
 
@@ -377,15 +384,29 @@ assign req_i[7] = i7_wb_cyc_i &
 // (highest priority).
 // If there is no requests from initiators, park initiator 0.
 //
-assign req_won = req_cont ? req_r :
-		 req_i[0] ? 3'd0 :
-		 req_i[1] ? 3'd1 :
-		 req_i[2] ? 3'd2 :
-		 req_i[3] ? 3'd3 :
-		 req_i[4] ? 3'd4 :
-		 req_i[5] ? 3'd5 :
-		 req_i[6] ? 3'd6 :
-		 req_i[7] ? 3'd7 : 3'd0;
+//orig: assign req_won = req_cont ? req_r :
+//orig: 		 req_i[0] ? 3'd0 :
+//orig: 		 req_i[1] ? 3'd1 :
+//orig: 		 req_i[2] ? 3'd2 :
+//orig: 		 req_i[3] ? 3'd3 :
+//orig: 		 req_i[4] ? 3'd4 :
+//orig: 		 req_i[5] ? 3'd5 :
+//orig: 		 req_i[6] ? 3'd6 :
+//orig: 		 req_i[7] ? 3'd7 : 3'd0;
+
+always @(*)
+  casez ({req_cont, req_i}) // synopsys parallel_case
+    9'b1????????:  req_won <= req_r;
+    9'b000000001:  req_won <= 3'd0;
+    9'b000000010:  req_won <= 3'd1;
+    9'b000000100:  req_won <= 3'd2;
+    9'b000001000:  req_won <= 3'd3;
+    9'b000010000:  req_won <= 3'd4;
+    9'b000100000:  req_won <= 3'd5;
+    9'b001000000:  req_won <= 3'd6;
+    9'b010000000:  req_won <= 3'd7;
+    default:       req_won <= 3'd0;
+  endcase
 
 //
 // Check if current initiator still wants access to the target and if
@@ -393,14 +414,14 @@ assign req_won = req_cont ? req_r :
 //
 always @(req_r or req_i)
 	case (req_r)	// synopsys parallel_case
-		3'd0: req_cont = req_i[0];
-		3'd1: req_cont = req_i[1];
-		3'd2: req_cont = req_i[2];
-		3'd3: req_cont = req_i[3];
-		3'd4: req_cont = req_i[4];
-		3'd5: req_cont = req_i[5];
-		3'd6: req_cont = req_i[6];
-		3'd7: req_cont = req_i[7];
+		3'd0: req_cont <= req_i[0];
+		3'd1: req_cont <= req_i[1];
+		3'd2: req_cont <= req_i[2];
+		3'd3: req_cont <= req_i[3];
+		3'd4: req_cont <= req_i[4];
+		3'd5: req_cont <= req_i[5];
+		3'd6: req_cont <= req_i[6];
+		3'd7: req_cont <= req_i[7];
 	endcase
 
 //
