@@ -9,8 +9,14 @@ module subsoc_top
 )
 (
   input               clk,
-  input               reset
+  input               reset,
 
+  // or32 PROG interface
+  input               or32_en_i,          // (1)enable (0)reset OR32
+  input   [31:0]      or32_prog_addr_i,   // addr for OR32_PROG
+  input   [31:0]      or32_prog_data_i,   // data for OR32_PROG
+  input               or32_prog_en_i      // (1)prog addr,data to OR32
+  
   //
   // SPI controller external i/f wires
   //
@@ -371,7 +377,7 @@ assign wb_dm_dat_o = 32'h0000_0000;
 or1200_top or1200_top (
 
 	// Common
-	.rst_i		( wb_rst ),
+	.rst_i		( wb_rst | (~or32_en_i) ),
 	.clk_i		( wb_clk ),
 `ifdef OR1200_CLMODE_1TO2
 	.clmode_i	( 2'b01 ),
@@ -382,7 +388,7 @@ or1200_top or1200_top (
 	.clmode_i	( 2'b00 ),
 `endif
 `endif
-
+  
 	// WISHBONE Instruction Master
 	.iwb_clk_i	( wb_clk ),
 	.iwb_rst_i	( wb_rst ),
@@ -506,24 +512,30 @@ assign wb_sp_ack_o = 1'b0;
 //
 subsoc_onchip_ram_top # 
 (
-    .adr_width(`MEMORY_ADR_WIDTH)     //16 blocks of 2048 bytes memory 32768
+  .RAM_AW       (`MEMORY_ADR_WIDTH)     //16 blocks of 2048 bytes memory 32768
 )
 onchip_ram_top (
 
-	// WISHBONE common
-	.wb_clk_i	( wb_clk ),
-	.wb_rst_i	( wb_rst ),
+  // WISHBONE common
+  .wb_clk_i	( wb_clk ),
+  .wb_rst_i	( wb_rst ),
 
-	// WISHBONE slave
-	.wb_dat_i	( wb_ss_dat_i ),
-	.wb_dat_o	( wb_ss_dat_o ),
-	.wb_adr_i	( wb_ss_adr_i ),
-	.wb_sel_i	( wb_ss_sel_i ),
-	.wb_we_i	( wb_ss_we_i  ),
-	.wb_cyc_i	( wb_ss_cyc_i ),
-	.wb_stb_i	( wb_ss_stb_i ),
-	.wb_ack_o	( wb_ss_ack_o ),
-	.wb_err_o	( wb_ss_err_o )
+  // WISHBONE slave
+  .wb_dat_i	( wb_ss_dat_i ),
+  .wb_dat_o	( wb_ss_dat_o ),
+  .wb_adr_i	( wb_ss_adr_i ),
+  .wb_sel_i	( wb_ss_sel_i ),
+  .wb_we_i	( wb_ss_we_i  ),
+  .wb_cyc_i	( wb_ss_cyc_i ),
+  .wb_stb_i	( wb_ss_stb_i ),
+  .wb_ack_o	( wb_ss_ack_o ),
+  .wb_err_o	( wb_ss_err_o ),
+
+  // OR32 PROG interface
+  .prog_addr_i  (or32_prog_addr_i[`MEMORY_ADR_WIDTH+1:2]),  // addr for OR32_PROG
+  .prog_data_i  (or32_prog_data_i),     // data for OR32_PROG
+  .prog_en_i    (or32_prog_en_i)        // (1)write addr/data to OR32
+
 );
 
 //

@@ -118,28 +118,36 @@
 `include "timescale.v"
 // synopsys translate_on
 
-module subsoc_onchip_ram (
-    // Generic synchronous single-port RAM interface
-    clk, rst, ce, we, oe, addr, di, doq
+module subsoc_onchip_ram #(
+  //
+  // Default address and data buses width
+  //
+  parameter AW = 11,
+  parameter DW = 8
+) (
+  //
+  // Generic synchronous dual-port RAM interface
+  //
+  input			  clk,	    // Clock
+  input			  rst,	    // Reset
+  
+  // Port A
+  input			  ce,	    // Chip enable input
+  input			  we,	    // Write enable input
+  input			  oe,	    // Output enable input
+  input       [AW-1:0]	  addr,	    // address bus inputs
+  input	      [DW-1:0]	  di,	    // input data bus
+  output  reg [DW-1:0]	  doq,	    // output data bus
+  
+  // Port B
+  input			  ce_b,	    // Chip enable input
+  input			  we_b,	    // Write enable input
+  input			  oe_b,	    // Output enable input
+  input       [AW-1:0]	  addr_b,   // address bus inputs
+  input	      [DW-1:0]	  di_b,	    // input data bus
+  output  reg [DW-1:0]	  doq_b     // output data bus
 );
 
-//
-// Default address and data buses width
-//
-parameter aw = 11;
-parameter dw = 8;
-
-//
-// Generic synchronous single-port RAM interface
-//
-input			clk;	// Clock
-input			rst;	// Reset
-input			ce;	// Chip enable input
-input			we;	// Write enable input
-input			oe;	// Output enable input
-input 	[aw-1:0]	addr;	// address bus inputs
-input	[dw-1:0]	di;	// input data bus
-output	reg [dw-1:0]	doq;	// output data bus
 
 //
 // Internal wires and registers
@@ -152,7 +160,7 @@ output	reg [dw-1:0]	doq;	// output data bus
 //
 // Generic RAM's registers and wires
 //
-reg	[dw-1:0]	mem [(1<<aw)-1:0];	// RAM content
+reg	[DW-1:0]	mem [(1<<AW)-1:0];	// RAM content
 
 // //  The following code is only necessary if you wish to initialize the RAM 
 // //  contents via an external file (use $readmemb for binary data)
@@ -164,6 +172,13 @@ always @(posedge clk)
       if (we)
          mem[addr] <= di;
       doq <= mem[addr];
+   end
+
+always @(posedge clk)
+   if (ce_b) begin
+      if (we_b)
+         mem[addr_b] <= di_b;
+      doq_b <= mem[addr_b];
    end
 
 endmodule

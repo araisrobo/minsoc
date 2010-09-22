@@ -56,13 +56,20 @@ module subsoc_onchip_ram_top (
   wb_clk_i, wb_rst_i, 
  
   wb_dat_i, wb_dat_o, wb_adr_i, wb_sel_i, wb_we_i, wb_cyc_i, 
-  wb_stb_i, wb_ack_o, wb_err_o 
+  wb_stb_i, wb_ack_o, wb_err_o,
+  
+  // OR32 PROG interface
+  prog_addr_i,    // addr for OR32_PROG
+  prog_data_i,    // data for OR32_PROG
+  prog_en_i       // (1)write addr/data to OR32
+
 ); 
  
 // 
 // Parameters 
 //
-parameter    adr_width = 2;
+parameter   RAM_AW = 2;
+parameter   RAM_DW = 32;
  
 // 
 // I/O Ports 
@@ -82,6 +89,11 @@ input           wb_cyc_i;
 input           wb_stb_i; 
 output reg      wb_ack_o; 
 output reg      wb_err_o; 
+  
+// OR32 PROG interface
+input  [RAM_AW+1:2]   prog_addr_i;      // addr for OR32_PROG
+input  [RAM_DW-1:0]   prog_data_i;      // data for OR32_PROG
+input                 prog_en_i;        // (1)write addr/data to OR32
  
 // 
 // Internal regs and wires 
@@ -98,14 +110,17 @@ wire        wb_err;
 // Aliases and simple assignments 
 // 
 // assign wb_ack_o = ack_re | ack_we; 
-// assign wb_err_o = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:adr_width+2]);  // If Access to > (8-bit leading prefix ignored) 
+// assign wb_err_o = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:RAM_AW+2]);  // If Access to > (8-bit leading prefix ignored) 
 assign we = wb_cyc_i & wb_stb_i & wb_we_i & (|wb_sel_i[3:0]); 
-assign be_i = (wb_cyc_i & wb_stb_i) * wb_sel_i; 
+assign be_i[0] = wb_cyc_i & wb_stb_i & wb_sel_i[0]; 
+assign be_i[1] = wb_cyc_i & wb_stb_i & wb_sel_i[1]; 
+assign be_i[2] = wb_cyc_i & wb_stb_i & wb_sel_i[2]; 
+assign be_i[3] = wb_cyc_i & wb_stb_i & wb_sel_i[3]; 
 
 // 
 // WB error
 // 
-assign wb_err = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:adr_width+2]);  // If Access to > (8-bit leading prefix ignored) 
+assign wb_err = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:RAM_AW+2]);  // If Access to > (8-bit leading prefix ignored) 
 always @ (posedge wb_clk_i) 
 begin 
 if (wb_rst_i) 
@@ -125,84 +140,98 @@ if (wb_rst_i)
 else
     wb_ack_o <= #1 (wb_ack); 
 end 
- 
-// // 
-// // Write acknowledge 
-// // 
-// always @ (posedge wb_clk_i) 
-// begin 
-// if (wb_rst_i) 
-//     ack_we <= 1'b0; 
-//   else
-//     ack_we <= #1 (wb_cyc_i & wb_stb_i & wb_we_i & ~ack_we); 
-// end 
-//  
-// // 
-// // read acknowledge 
-// // 
-// always @ (posedge wb_clk_i) 
-// begin 
-//   if (wb_rst_i) 
-//     ack_re <= 1'b0; 
-//   else  
-//     ack_re <= #1 (wb_cyc_i & wb_stb_i & ~wb_err_o & ~wb_we_i & ~ack_re); 
-// end 
 
-    subsoc_onchip_ram #
-	(
-		.aw(adr_width)
-	)
-	block_ram_0 ( 
-        .clk(wb_clk_i), 
-        .rst(wb_rst_i),
-        .addr(wb_adr_i[adr_width+1:2]), 
-        .di(wb_dat_i[7:0]), 
-        .doq(wb_dat_o[7:0]), 
-        .we(we), 
-        .oe(1'b1),
-        .ce(be_i[0])); 
+    subsoc_onchip_ram #(
+        .AW(RAM_AW)
+    ) block_ram_0 ( 
+        .clk    (wb_clk_i), 
+        .rst    (wb_rst_i),
+        
+        // Port A
+        .addr   (wb_adr_i[RAM_AW+1:2]), 
+        .di     (wb_dat_i[7:0]), 
+        .doq    (wb_dat_o[7:0]), 
+        .we     (we), 
+        .oe     (1'b1),
+        .ce     (be_i[0]),
+        
+        // Port B
+        .addr_b (prog_addr_i), 
+        .di_b   (prog_data_i[7:0]), 
+        .doq_b  (), 
+        .we_b   (prog_en_i), 
+        .oe_b   (1'b1),
+        .ce_b   (prog_en_i)
+    ); 
 
-    subsoc_onchip_ram #
-	(
-		.aw(adr_width)
-	)
-	block_ram_1 ( 
-        .clk(wb_clk_i), 
-        .rst(wb_rst_i),
-        .addr(wb_adr_i[adr_width+1:2]), 
-        .di(wb_dat_i[15:8]), 
-        .doq(wb_dat_o[15:8]), 
-        .we(we), 
-        .oe(1'b1),
-        .ce(be_i[1])); 
+    subsoc_onchip_ram #(
+        .AW(RAM_AW)
+    ) block_ram_1 ( 
+        .clk    (wb_clk_i), 
+        .rst    (wb_rst_i),
+        
+        // Port A
+        .addr   (wb_adr_i[RAM_AW+1:2]), 
+        .di     (wb_dat_i[15:8]), 
+        .doq    (wb_dat_o[15:8]), 
+        .we     (we), 
+        .oe     (1'b1),
+        .ce     (be_i[1]),
+        
+        // Port B
+        .addr_b (prog_addr_i), 
+        .di_b   (prog_data_i[15:8]), 
+        .doq_b  (), 
+        .we_b   (prog_en_i), 
+        .oe_b   (1'b1),
+        .ce_b   (prog_en_i)
+    ); 
 
-    subsoc_onchip_ram #
-	(
-		.aw(adr_width)
-	)
-	block_ram_2 ( 
-        .clk(wb_clk_i), 
-        .rst(wb_rst_i),
-        .addr(wb_adr_i[adr_width+1:2]), 
-        .di(wb_dat_i[23:16]), 
-        .doq(wb_dat_o[23:16]), 
-        .we(we), 
-        .oe(1'b1),
-        .ce(be_i[2])); 
-
-    subsoc_onchip_ram #
-	(
-		.aw(adr_width)
-	)
-	block_ram_3 ( 
-        .clk(wb_clk_i), 
-        .rst(wb_rst_i),
-        .addr(wb_adr_i[adr_width+1:2]), 
-        .di(wb_dat_i[31:24]), 
-        .doq(wb_dat_o[31:24]), 
-        .we(we), 
-        .oe(1'b1),
-        .ce(be_i[3])); 
+    subsoc_onchip_ram #(
+        .AW(RAM_AW)
+    ) block_ram_2 ( 
+        .clk    (wb_clk_i), 
+        .rst    (wb_rst_i),
+        
+        // Port A
+        .addr   (wb_adr_i[RAM_AW+1:2]), 
+        .di     (wb_dat_i[23:16]), 
+        .doq    (wb_dat_o[23:16]), 
+        .we     (we), 
+        .oe     (1'b1),
+        .ce     (be_i[2]),
+        
+        // Port B
+        .addr_b (prog_addr_i), 
+        .di_b   (prog_data_i[23:16]), 
+        .doq_b  (), 
+        .we_b   (prog_en_i), 
+        .oe_b   (1'b1),
+        .ce_b   (prog_en_i)
+    ); 
+    
+    subsoc_onchip_ram #(
+        .AW(RAM_AW)
+    ) block_ram_3 ( 
+        .clk    (wb_clk_i), 
+        .rst    (wb_rst_i),
+        
+        // Port A
+        .addr   (wb_adr_i[RAM_AW+1:2]), 
+        .di     (wb_dat_i[31:24]), 
+        .doq    (wb_dat_o[31:24]), 
+        .we     (we), 
+        .oe     (1'b1),
+        .ce     (be_i[3]),
+        
+        // Port B
+        .addr_b (prog_addr_i), 
+        .di_b   (prog_data_i[31:24]), 
+        .doq_b  (), 
+        .we_b   (prog_en_i), 
+        .oe_b   (1'b1),
+        .ce_b   (prog_en_i)
+    ); 
 
 endmodule 
 
