@@ -70,45 +70,45 @@ module subsoc_tc_top (
 	wb_clk_i,
 	wb_rst_i,
 
-	i0_wb_cyc_i,
-	i0_wb_stb_i,
-	i0_wb_adr_i,
-	i0_wb_sel_i,
-	i0_wb_we_i,
-	i0_wb_dat_i,
-	i0_wb_dat_o,
-	i0_wb_ack_o,
-	i0_wb_err_o,
+	//obsolete: i0_wb_cyc_i,
+	//obsolete: i0_wb_stb_i,
+	//obsolete: i0_wb_adr_i,
+	//obsolete: i0_wb_sel_i,
+	//obsolete: i0_wb_we_i,
+	//obsolete: i0_wb_dat_i,
+	//obsolete: i0_wb_dat_o,
+	//obsolete: i0_wb_ack_o,
+	//obsolete: i0_wb_err_o,
 
-	i1_wb_cyc_i,
-	i1_wb_stb_i,
-	i1_wb_adr_i,
-	i1_wb_sel_i,
-	i1_wb_we_i,
-	i1_wb_dat_i,
-	i1_wb_dat_o,
-	i1_wb_ack_o,
-	i1_wb_err_o,
+	//obsolete: i1_wb_cyc_i,
+	//obsolete: i1_wb_stb_i,
+	//obsolete: i1_wb_adr_i,
+	//obsolete: i1_wb_sel_i,
+	//obsolete: i1_wb_we_i,
+	//obsolete: i1_wb_dat_i,
+	//obsolete: i1_wb_dat_o,
+	//obsolete: i1_wb_ack_o,
+	//obsolete: i1_wb_err_o,
 
-	i2_wb_cyc_i,
-	i2_wb_stb_i,
-	i2_wb_adr_i,
-	i2_wb_sel_i,
-	i2_wb_we_i,
-	i2_wb_dat_i,
-	i2_wb_dat_o,
-	i2_wb_ack_o,
-	i2_wb_err_o,
+	//obsolete: i2_wb_cyc_i,
+	//obsolete: i2_wb_stb_i,
+	//obsolete: i2_wb_adr_i,
+	//obsolete: i2_wb_sel_i,
+	//obsolete: i2_wb_we_i,
+	//obsolete: i2_wb_dat_i,
+	//obsolete: i2_wb_dat_o,
+	//obsolete: i2_wb_ack_o,
+	//obsolete: i2_wb_err_o,
 
-	i3_wb_cyc_i,
-	i3_wb_stb_i,
-	i3_wb_adr_i,
-	i3_wb_sel_i,
-	i3_wb_we_i,
-	i3_wb_dat_i,
-	i3_wb_dat_o,
-	i3_wb_ack_o,
-	i3_wb_err_o,
+	//obsolete: i3_wb_cyc_i,
+	//obsolete: i3_wb_stb_i,
+	//obsolete: i3_wb_adr_i,
+	//obsolete: i3_wb_sel_i,
+	//obsolete: i3_wb_we_i,
+	//obsolete: i3_wb_dat_i,
+	//obsolete: i3_wb_dat_o,
+	//obsolete: i3_wb_ack_o,
+	//obsolete: i3_wb_err_o,
 
 	i4_wb_cyc_i,
 	i4_wb_stb_i,
@@ -130,25 +130,25 @@ module subsoc_tc_top (
 	i5_wb_ack_o,
 	i5_wb_err_o,
 
-	i6_wb_cyc_i,
-	i6_wb_stb_i,
-	i6_wb_adr_i,
-	i6_wb_sel_i,
-	i6_wb_we_i,
-	i6_wb_dat_i,
-	i6_wb_dat_o,
-	i6_wb_ack_o,
-	i6_wb_err_o,
+	//obsolete: i6_wb_cyc_i,
+	//obsolete: i6_wb_stb_i,
+	//obsolete: i6_wb_adr_i,
+	//obsolete: i6_wb_sel_i,
+	//obsolete: i6_wb_we_i,
+	//obsolete: i6_wb_dat_i,
+	//obsolete: i6_wb_dat_o,
+	//obsolete: i6_wb_ack_o,
+	//obsolete: i6_wb_err_o,
 
-	i7_wb_cyc_i,
-	i7_wb_stb_i,
-	i7_wb_adr_i,
-	i7_wb_sel_i,
-	i7_wb_we_i,
-	i7_wb_dat_i,
-	i7_wb_dat_o,
-	i7_wb_ack_o,
-	i7_wb_err_o,
+	//obsolete: i7_wb_cyc_i,
+	//obsolete: i7_wb_stb_i,
+	//obsolete: i7_wb_adr_i,
+	//obsolete: i7_wb_sel_i,
+	//obsolete: i7_wb_we_i,
+	//obsolete: i7_wb_dat_i,
+	//obsolete: i7_wb_dat_o,
+	//obsolete: i7_wb_ack_o,
+	//obsolete: i7_wb_err_o,
 
 	t0_wb_cyc_o,
 	t0_wb_stb_o,
@@ -266,57 +266,57 @@ parameter		t8_addr = 4'd7;
 input			wb_clk_i;
 input			wb_rst_i;
 
-//
-// WB slave i/f connecting initiator 0
-//
-input			i0_wb_cyc_i;
-input			i0_wb_stb_i;
-input	[`TC_AW-1:0]	i0_wb_adr_i;
-input	[`TC_BSW-1:0]	i0_wb_sel_i;
-input			i0_wb_we_i;
-input	[`TC_DW-1:0]	i0_wb_dat_i;
-output	[`TC_DW-1:0]	i0_wb_dat_o;
-output			i0_wb_ack_o;
-output			i0_wb_err_o;
-
-//
-// WB slave i/f connecting initiator 1
-//
-input			i1_wb_cyc_i;
-input			i1_wb_stb_i;
-input	[`TC_AW-1:0]	i1_wb_adr_i;
-input	[`TC_BSW-1:0]	i1_wb_sel_i;
-input			i1_wb_we_i;
-input	[`TC_DW-1:0]	i1_wb_dat_i;
-output	[`TC_DW-1:0]	i1_wb_dat_o;
-output			i1_wb_ack_o;
-output			i1_wb_err_o;
-
-//
-// WB slave i/f connecting initiator 2
-//
-input			i2_wb_cyc_i;
-input			i2_wb_stb_i;
-input	[`TC_AW-1:0]	i2_wb_adr_i;
-input	[`TC_BSW-1:0]	i2_wb_sel_i;
-input			i2_wb_we_i;
-input	[`TC_DW-1:0]	i2_wb_dat_i;
-output	[`TC_DW-1:0]	i2_wb_dat_o;
-output			i2_wb_ack_o;
-output			i2_wb_err_o;
-
-//
-// WB slave i/f connecting initiator 3
-//
-input			i3_wb_cyc_i;
-input			i3_wb_stb_i;
-input	[`TC_AW-1:0]	i3_wb_adr_i;
-input	[`TC_BSW-1:0]	i3_wb_sel_i;
-input			i3_wb_we_i;
-input	[`TC_DW-1:0]	i3_wb_dat_i;
-output	[`TC_DW-1:0]	i3_wb_dat_o;
-output			i3_wb_ack_o;
-output			i3_wb_err_o;
+//obsolete: //
+//obsolete: // WB slave i/f connecting initiator 0
+//obsolete: //
+//obsolete: input			i0_wb_cyc_i;
+//obsolete: input			i0_wb_stb_i;
+//obsolete: input	[`TC_AW-1:0]	i0_wb_adr_i;
+//obsolete: input	[`TC_BSW-1:0]	i0_wb_sel_i;
+//obsolete: input			i0_wb_we_i;
+//obsolete: input	[`TC_DW-1:0]	i0_wb_dat_i;
+//obsolete: output	[`TC_DW-1:0]	i0_wb_dat_o;
+//obsolete: output			i0_wb_ack_o;
+//obsolete: output			i0_wb_err_o;
+//obsolete: 
+//obsolete: //
+//obsolete: // WB slave i/f connecting initiator 1
+//obsolete: //
+//obsolete: input			i1_wb_cyc_i;
+//obsolete: input			i1_wb_stb_i;
+//obsolete: input	[`TC_AW-1:0]	i1_wb_adr_i;
+//obsolete: input	[`TC_BSW-1:0]	i1_wb_sel_i;
+//obsolete: input			i1_wb_we_i;
+//obsolete: input	[`TC_DW-1:0]	i1_wb_dat_i;
+//obsolete: output	[`TC_DW-1:0]	i1_wb_dat_o;
+//obsolete: output			i1_wb_ack_o;
+//obsolete: output			i1_wb_err_o;
+//obsolete: 
+//obsolete: //
+//obsolete: // WB slave i/f connecting initiator 2
+//obsolete: //
+//obsolete: input			i2_wb_cyc_i;
+//obsolete: input			i2_wb_stb_i;
+//obsolete: input	[`TC_AW-1:0]	i2_wb_adr_i;
+//obsolete: input	[`TC_BSW-1:0]	i2_wb_sel_i;
+//obsolete: input			i2_wb_we_i;
+//obsolete: input	[`TC_DW-1:0]	i2_wb_dat_i;
+//obsolete: output	[`TC_DW-1:0]	i2_wb_dat_o;
+//obsolete: output			i2_wb_ack_o;
+//obsolete: output			i2_wb_err_o;
+//obsolete: 
+//obsolete: //
+//obsolete: // WB slave i/f connecting initiator 3
+//obsolete: //
+//obsolete: input			i3_wb_cyc_i;
+//obsolete: input			i3_wb_stb_i;
+//obsolete: input	[`TC_AW-1:0]	i3_wb_adr_i;
+//obsolete: input	[`TC_BSW-1:0]	i3_wb_sel_i;
+//obsolete: input			i3_wb_we_i;
+//obsolete: input	[`TC_DW-1:0]	i3_wb_dat_i;
+//obsolete: output	[`TC_DW-1:0]	i3_wb_dat_o;
+//obsolete: output			i3_wb_ack_o;
+//obsolete: output			i3_wb_err_o;
 
 //
 // WB slave i/f connecting initiator 4
@@ -344,31 +344,31 @@ output	[`TC_DW-1:0]	i5_wb_dat_o;
 output			i5_wb_ack_o;
 output			i5_wb_err_o;
 
-//
-// WB slave i/f connecting initiator 6
-//
-input			i6_wb_cyc_i;
-input			i6_wb_stb_i;
-input	[`TC_AW-1:0]	i6_wb_adr_i;
-input	[`TC_BSW-1:0]	i6_wb_sel_i;
-input			i6_wb_we_i;
-input	[`TC_DW-1:0]	i6_wb_dat_i;
-output	[`TC_DW-1:0]	i6_wb_dat_o;
-output			i6_wb_ack_o;
-output			i6_wb_err_o;
-
-//
-// WB slave i/f connecting initiator 7
-//
-input			i7_wb_cyc_i;
-input			i7_wb_stb_i;
-input	[`TC_AW-1:0]	i7_wb_adr_i;
-input	[`TC_BSW-1:0]	i7_wb_sel_i;
-input			i7_wb_we_i;
-input	[`TC_DW-1:0]	i7_wb_dat_i;
-output	[`TC_DW-1:0]	i7_wb_dat_o;
-output			i7_wb_ack_o;
-output			i7_wb_err_o;
+//obsolete: //
+//obsolete: // WB slave i/f connecting initiator 6
+//obsolete: //
+//obsolete: input			i6_wb_cyc_i;
+//obsolete: input			i6_wb_stb_i;
+//obsolete: input	[`TC_AW-1:0]	i6_wb_adr_i;
+//obsolete: input	[`TC_BSW-1:0]	i6_wb_sel_i;
+//obsolete: input			i6_wb_we_i;
+//obsolete: input	[`TC_DW-1:0]	i6_wb_dat_i;
+//obsolete: output	[`TC_DW-1:0]	i6_wb_dat_o;
+//obsolete: output			i6_wb_ack_o;
+//obsolete: output			i6_wb_err_o;
+//obsolete: 
+//obsolete: //
+//obsolete: // WB slave i/f connecting initiator 7
+//obsolete: //
+//obsolete: input			i7_wb_cyc_i;
+//obsolete: input			i7_wb_stb_i;
+//obsolete: input	[`TC_AW-1:0]	i7_wb_adr_i;
+//obsolete: input	[`TC_BSW-1:0]	i7_wb_sel_i;
+//obsolete: input			i7_wb_we_i;
+//obsolete: input	[`TC_DW-1:0]	i7_wb_dat_i;
+//obsolete: output	[`TC_DW-1:0]	i7_wb_dat_o;
+//obsolete: output			i7_wb_ack_o;
+//obsolete: output			i7_wb_err_o;
 
 //
 // WB master i/f connecting target 0
@@ -494,54 +494,54 @@ input			t8_wb_err_i;
 //
 // Outputs for initiators from both mi_to_st blocks
 //
-wire	[`TC_DW-1:0]	xi0_wb_dat_o;
-wire			xi0_wb_ack_o;
-wire			xi0_wb_err_o;
-wire	[`TC_DW-1:0]	xi1_wb_dat_o;
-wire			xi1_wb_ack_o;
-wire			xi1_wb_err_o;
-wire	[`TC_DW-1:0]	xi2_wb_dat_o;
-wire			xi2_wb_ack_o;
-wire			xi2_wb_err_o;
-wire	[`TC_DW-1:0]	xi3_wb_dat_o;
-wire			xi3_wb_ack_o;
-wire			xi3_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	xi0_wb_dat_o;
+//obsolete: wire			xi0_wb_ack_o;
+//obsolete: wire			xi0_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	xi1_wb_dat_o;
+//obsolete: wire			xi1_wb_ack_o;
+//obsolete: wire			xi1_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	xi2_wb_dat_o;
+//obsolete: wire			xi2_wb_ack_o;
+//obsolete: wire			xi2_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	xi3_wb_dat_o;
+//obsolete: wire			xi3_wb_ack_o;
+//obsolete: wire			xi3_wb_err_o;
 wire	[`TC_DW-1:0]	xi4_wb_dat_o;
 wire			xi4_wb_ack_o;
 wire			xi4_wb_err_o;
 wire	[`TC_DW-1:0]	xi5_wb_dat_o;
 wire			xi5_wb_ack_o;
 wire			xi5_wb_err_o;
-wire	[`TC_DW-1:0]	xi6_wb_dat_o;
-wire			xi6_wb_ack_o;
-wire			xi6_wb_err_o;
-wire	[`TC_DW-1:0]	xi7_wb_dat_o;
-wire			xi7_wb_ack_o;
-wire			xi7_wb_err_o;
-wire	[`TC_DW-1:0]	yi0_wb_dat_o;
-wire			yi0_wb_ack_o;
-wire			yi0_wb_err_o;
-wire	[`TC_DW-1:0]	yi1_wb_dat_o;
-wire			yi1_wb_ack_o;
-wire			yi1_wb_err_o;
-wire	[`TC_DW-1:0]	yi2_wb_dat_o;
-wire			yi2_wb_ack_o;
-wire			yi2_wb_err_o;
-wire	[`TC_DW-1:0]	yi3_wb_dat_o;
-wire			yi3_wb_ack_o;
-wire			yi3_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	xi6_wb_dat_o;
+//obsolete: wire			xi6_wb_ack_o;
+//obsolete: wire			xi6_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	xi7_wb_dat_o;
+//obsolete: wire			xi7_wb_ack_o;
+//obsolete: wire			xi7_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	yi0_wb_dat_o;
+//obsolete: wire			yi0_wb_ack_o;
+//obsolete: wire			yi0_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	yi1_wb_dat_o;
+//obsolete: wire			yi1_wb_ack_o;
+//obsolete: wire			yi1_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	yi2_wb_dat_o;
+//obsolete: wire			yi2_wb_ack_o;
+//obsolete: wire			yi2_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	yi3_wb_dat_o;
+//obsolete: wire			yi3_wb_ack_o;
+//obsolete: wire			yi3_wb_err_o;
 wire	[`TC_DW-1:0]	yi4_wb_dat_o;
 wire			yi4_wb_ack_o;
 wire			yi4_wb_err_o;
 wire	[`TC_DW-1:0]	yi5_wb_dat_o;
 wire			yi5_wb_ack_o;
 wire			yi5_wb_err_o;
-wire	[`TC_DW-1:0]	yi6_wb_dat_o;
-wire			yi6_wb_ack_o;
-wire			yi6_wb_err_o;
-wire	[`TC_DW-1:0]	yi7_wb_dat_o;
-wire			yi7_wb_ack_o;
-wire			yi7_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	yi6_wb_dat_o;
+//obsolete: wire			yi6_wb_ack_o;
+//obsolete: wire			yi6_wb_err_o;
+//obsolete: wire	[`TC_DW-1:0]	yi7_wb_dat_o;
+//obsolete: wire			yi7_wb_ack_o;
+//obsolete: wire			yi7_wb_err_o;
 
 //
 // Intermediate signals connecting peripheral channel's
@@ -560,30 +560,30 @@ wire			z_wb_err_t;
 //
 // Outputs for initiators are ORed from both mi_to_st blocks
 //
-assign i0_wb_dat_o = xi0_wb_dat_o | yi0_wb_dat_o;
-assign i0_wb_ack_o = xi0_wb_ack_o | yi0_wb_ack_o;
-assign i0_wb_err_o = xi0_wb_err_o | yi0_wb_err_o;
-assign i1_wb_dat_o = xi1_wb_dat_o | yi1_wb_dat_o;
-assign i1_wb_ack_o = xi1_wb_ack_o | yi1_wb_ack_o;
-assign i1_wb_err_o = xi1_wb_err_o | yi1_wb_err_o;
-assign i2_wb_dat_o = xi2_wb_dat_o | yi2_wb_dat_o;
-assign i2_wb_ack_o = xi2_wb_ack_o | yi2_wb_ack_o;
-assign i2_wb_err_o = xi2_wb_err_o | yi2_wb_err_o;
-assign i3_wb_dat_o = xi3_wb_dat_o | yi3_wb_dat_o;
-assign i3_wb_ack_o = xi3_wb_ack_o | yi3_wb_ack_o;
-assign i3_wb_err_o = xi3_wb_err_o | yi3_wb_err_o;
+//obsolete: assign i0_wb_dat_o = xi0_wb_dat_o | yi0_wb_dat_o;
+//obsolete: assign i0_wb_ack_o = xi0_wb_ack_o | yi0_wb_ack_o;
+//obsolete: assign i0_wb_err_o = xi0_wb_err_o | yi0_wb_err_o;
+//obsolete: assign i1_wb_dat_o = xi1_wb_dat_o | yi1_wb_dat_o;
+//obsolete: assign i1_wb_ack_o = xi1_wb_ack_o | yi1_wb_ack_o;
+//obsolete: assign i1_wb_err_o = xi1_wb_err_o | yi1_wb_err_o;
+//obsolete: assign i2_wb_dat_o = xi2_wb_dat_o | yi2_wb_dat_o;
+//obsolete: assign i2_wb_ack_o = xi2_wb_ack_o | yi2_wb_ack_o;
+//obsolete: assign i2_wb_err_o = xi2_wb_err_o | yi2_wb_err_o;
+//obsolete: assign i3_wb_dat_o = xi3_wb_dat_o | yi3_wb_dat_o;
+//obsolete: assign i3_wb_ack_o = xi3_wb_ack_o | yi3_wb_ack_o;
+//obsolete: assign i3_wb_err_o = xi3_wb_err_o | yi3_wb_err_o;
 assign i4_wb_dat_o = xi4_wb_dat_o | yi4_wb_dat_o;
 assign i4_wb_ack_o = xi4_wb_ack_o | yi4_wb_ack_o;
 assign i4_wb_err_o = xi4_wb_err_o | yi4_wb_err_o;
 assign i5_wb_dat_o = xi5_wb_dat_o | yi5_wb_dat_o;
 assign i5_wb_ack_o = xi5_wb_ack_o | yi5_wb_ack_o;
 assign i5_wb_err_o = xi5_wb_err_o | yi5_wb_err_o;
-assign i6_wb_dat_o = xi6_wb_dat_o | yi6_wb_dat_o;
-assign i6_wb_ack_o = xi6_wb_ack_o | yi6_wb_ack_o;
-assign i6_wb_err_o = xi6_wb_err_o | yi6_wb_err_o;
-assign i7_wb_dat_o = xi7_wb_dat_o | yi7_wb_dat_o;
-assign i7_wb_ack_o = xi7_wb_ack_o | yi7_wb_ack_o;
-assign i7_wb_err_o = xi7_wb_err_o | yi7_wb_err_o;
+//obsolete: assign i6_wb_dat_o = xi6_wb_dat_o | yi6_wb_dat_o;
+//obsolete: assign i6_wb_ack_o = xi6_wb_ack_o | yi6_wb_ack_o;
+//obsolete: assign i6_wb_err_o = xi6_wb_err_o | yi6_wb_err_o;
+//obsolete: assign i7_wb_dat_o = xi7_wb_dat_o | yi7_wb_dat_o;
+//obsolete: assign i7_wb_ack_o = xi7_wb_ack_o | yi7_wb_ack_o;
+//obsolete: assign i7_wb_err_o = xi7_wb_err_o | yi7_wb_err_o;
 
 //
 // From initiators to target 0
@@ -593,45 +593,45 @@ tc_mi_to_st #(t0_addr_w, t0_addr,
 	.wb_clk_i(wb_clk_i),
 	.wb_rst_i(wb_rst_i),
 
-	.i0_wb_cyc_i(i0_wb_cyc_i),
-	.i0_wb_stb_i(i0_wb_stb_i),
-	.i0_wb_adr_i(i0_wb_adr_i),
-	.i0_wb_sel_i(i0_wb_sel_i),
-	.i0_wb_we_i(i0_wb_we_i),
-	.i0_wb_dat_i(i0_wb_dat_i),
-	.i0_wb_dat_o(xi0_wb_dat_o),
-	.i0_wb_ack_o(xi0_wb_ack_o),
-	.i0_wb_err_o(xi0_wb_err_o),
+	//obsolete: .i0_wb_cyc_i(i0_wb_cyc_i),
+	//obsolete: .i0_wb_stb_i(i0_wb_stb_i),
+	//obsolete: .i0_wb_adr_i(i0_wb_adr_i),
+	//obsolete: .i0_wb_sel_i(i0_wb_sel_i),
+	//obsolete: .i0_wb_we_i(i0_wb_we_i),
+	//obsolete: .i0_wb_dat_i(i0_wb_dat_i),
+	//obsolete: .i0_wb_dat_o(xi0_wb_dat_o),
+	//obsolete: .i0_wb_ack_o(xi0_wb_ack_o),
+	//obsolete: .i0_wb_err_o(xi0_wb_err_o),
 
-	.i1_wb_cyc_i(i1_wb_cyc_i),
-	.i1_wb_stb_i(i1_wb_stb_i),
-	.i1_wb_adr_i(i1_wb_adr_i),
-	.i1_wb_sel_i(i1_wb_sel_i),
-	.i1_wb_we_i(i1_wb_we_i),
-	.i1_wb_dat_i(i1_wb_dat_i),
-	.i1_wb_dat_o(xi1_wb_dat_o),
-	.i1_wb_ack_o(xi1_wb_ack_o),
-	.i1_wb_err_o(xi1_wb_err_o),
+	//obsolete: .i1_wb_cyc_i(i1_wb_cyc_i),
+	//obsolete: .i1_wb_stb_i(i1_wb_stb_i),
+	//obsolete: .i1_wb_adr_i(i1_wb_adr_i),
+	//obsolete: .i1_wb_sel_i(i1_wb_sel_i),
+	//obsolete: .i1_wb_we_i(i1_wb_we_i),
+	//obsolete: .i1_wb_dat_i(i1_wb_dat_i),
+	//obsolete: .i1_wb_dat_o(xi1_wb_dat_o),
+	//obsolete: .i1_wb_ack_o(xi1_wb_ack_o),
+	//obsolete: .i1_wb_err_o(xi1_wb_err_o),
 
-	.i2_wb_cyc_i(i2_wb_cyc_i),
-	.i2_wb_stb_i(i2_wb_stb_i),
-	.i2_wb_adr_i(i2_wb_adr_i),
-	.i2_wb_sel_i(i2_wb_sel_i),
-	.i2_wb_we_i(i2_wb_we_i),
-	.i2_wb_dat_i(i2_wb_dat_i),
-	.i2_wb_dat_o(xi2_wb_dat_o),
-	.i2_wb_ack_o(xi2_wb_ack_o),
-	.i2_wb_err_o(xi2_wb_err_o),
+	//obsolete: .i2_wb_cyc_i(i2_wb_cyc_i),
+	//obsolete: .i2_wb_stb_i(i2_wb_stb_i),
+	//obsolete: .i2_wb_adr_i(i2_wb_adr_i),
+	//obsolete: .i2_wb_sel_i(i2_wb_sel_i),
+	//obsolete: .i2_wb_we_i(i2_wb_we_i),
+	//obsolete: .i2_wb_dat_i(i2_wb_dat_i),
+	//obsolete: .i2_wb_dat_o(xi2_wb_dat_o),
+	//obsolete: .i2_wb_ack_o(xi2_wb_ack_o),
+	//obsolete: .i2_wb_err_o(xi2_wb_err_o),
 
-	.i3_wb_cyc_i(i3_wb_cyc_i),
-	.i3_wb_stb_i(i3_wb_stb_i),
-	.i3_wb_adr_i(i3_wb_adr_i),
-	.i3_wb_sel_i(i3_wb_sel_i),
-	.i3_wb_we_i(i3_wb_we_i),
-	.i3_wb_dat_i(i3_wb_dat_i),
-	.i3_wb_dat_o(xi3_wb_dat_o),
-	.i3_wb_ack_o(xi3_wb_ack_o),
-	.i3_wb_err_o(xi3_wb_err_o),
+	//obsolete: .i3_wb_cyc_i(i3_wb_cyc_i),
+	//obsolete: .i3_wb_stb_i(i3_wb_stb_i),
+	//obsolete: .i3_wb_adr_i(i3_wb_adr_i),
+	//obsolete: .i3_wb_sel_i(i3_wb_sel_i),
+	//obsolete: .i3_wb_we_i(i3_wb_we_i),
+	//obsolete: .i3_wb_dat_i(i3_wb_dat_i),
+	//obsolete: .i3_wb_dat_o(xi3_wb_dat_o),
+	//obsolete: .i3_wb_ack_o(xi3_wb_ack_o),
+	//obsolete: .i3_wb_err_o(xi3_wb_err_o),
 
 	.i4_wb_cyc_i(i4_wb_cyc_i),
 	.i4_wb_stb_i(i4_wb_stb_i),
@@ -653,25 +653,25 @@ tc_mi_to_st #(t0_addr_w, t0_addr,
 	.i5_wb_ack_o(xi5_wb_ack_o),
 	.i5_wb_err_o(xi5_wb_err_o),
 
-	.i6_wb_cyc_i(i6_wb_cyc_i),
-	.i6_wb_stb_i(i6_wb_stb_i),
-	.i6_wb_adr_i(i6_wb_adr_i),
-	.i6_wb_sel_i(i6_wb_sel_i),
-	.i6_wb_we_i(i6_wb_we_i),
-	.i6_wb_dat_i(i6_wb_dat_i),
-	.i6_wb_dat_o(xi6_wb_dat_o),
-	.i6_wb_ack_o(xi6_wb_ack_o),
-	.i6_wb_err_o(xi6_wb_err_o),
+	//obsolete: .i6_wb_cyc_i(i6_wb_cyc_i),
+	//obsolete: .i6_wb_stb_i(i6_wb_stb_i),
+	//obsolete: .i6_wb_adr_i(i6_wb_adr_i),
+	//obsolete: .i6_wb_sel_i(i6_wb_sel_i),
+	//obsolete: .i6_wb_we_i(i6_wb_we_i),
+	//obsolete: .i6_wb_dat_i(i6_wb_dat_i),
+	//obsolete: .i6_wb_dat_o(xi6_wb_dat_o),
+	//obsolete: .i6_wb_ack_o(xi6_wb_ack_o),
+	//obsolete: .i6_wb_err_o(xi6_wb_err_o),
 
-	.i7_wb_cyc_i(i7_wb_cyc_i),
-	.i7_wb_stb_i(i7_wb_stb_i),
-	.i7_wb_adr_i(i7_wb_adr_i),
-	.i7_wb_sel_i(i7_wb_sel_i),
-	.i7_wb_we_i(i7_wb_we_i),
-	.i7_wb_dat_i(i7_wb_dat_i),
-	.i7_wb_dat_o(xi7_wb_dat_o),
-	.i7_wb_ack_o(xi7_wb_ack_o),
-	.i7_wb_err_o(xi7_wb_err_o),
+	//obsolete: .i7_wb_cyc_i(i7_wb_cyc_i),
+	//obsolete: .i7_wb_stb_i(i7_wb_stb_i),
+	//obsolete: .i7_wb_adr_i(i7_wb_adr_i),
+	//obsolete: .i7_wb_sel_i(i7_wb_sel_i),
+	//obsolete: .i7_wb_we_i(i7_wb_we_i),
+	//obsolete: .i7_wb_dat_i(i7_wb_dat_i),
+	//obsolete: .i7_wb_dat_o(xi7_wb_dat_o),
+	//obsolete: .i7_wb_ack_o(xi7_wb_ack_o),
+	//obsolete: .i7_wb_err_o(xi7_wb_err_o),
 
 	.t0_wb_cyc_o(t0_wb_cyc_o),
 	.t0_wb_stb_o(t0_wb_stb_o),
@@ -693,45 +693,45 @@ tc_mi_to_st #(t1_addr_w, t1_addr,
 	.wb_clk_i(wb_clk_i),
 	.wb_rst_i(wb_rst_i),
 
-	.i0_wb_cyc_i(i0_wb_cyc_i),
-	.i0_wb_stb_i(i0_wb_stb_i),
-	.i0_wb_adr_i(i0_wb_adr_i),
-	.i0_wb_sel_i(i0_wb_sel_i),
-	.i0_wb_we_i(i0_wb_we_i),
-	.i0_wb_dat_i(i0_wb_dat_i),
-	.i0_wb_dat_o(yi0_wb_dat_o),
-	.i0_wb_ack_o(yi0_wb_ack_o),
-	.i0_wb_err_o(yi0_wb_err_o),
+	//obsolete: .i0_wb_cyc_i(i0_wb_cyc_i),
+	//obsolete: .i0_wb_stb_i(i0_wb_stb_i),
+	//obsolete: .i0_wb_adr_i(i0_wb_adr_i),
+	//obsolete: .i0_wb_sel_i(i0_wb_sel_i),
+	//obsolete: .i0_wb_we_i(i0_wb_we_i),
+	//obsolete: .i0_wb_dat_i(i0_wb_dat_i),
+	//obsolete: .i0_wb_dat_o(yi0_wb_dat_o),
+	//obsolete: .i0_wb_ack_o(yi0_wb_ack_o),
+	//obsolete: .i0_wb_err_o(yi0_wb_err_o),
 
-	.i1_wb_cyc_i(i1_wb_cyc_i),
-	.i1_wb_stb_i(i1_wb_stb_i),
-	.i1_wb_adr_i(i1_wb_adr_i),
-	.i1_wb_sel_i(i1_wb_sel_i),
-	.i1_wb_we_i(i1_wb_we_i),
-	.i1_wb_dat_i(i1_wb_dat_i),
-	.i1_wb_dat_o(yi1_wb_dat_o),
-	.i1_wb_ack_o(yi1_wb_ack_o),
-	.i1_wb_err_o(yi1_wb_err_o),
+	//obsolete: .i1_wb_cyc_i(i1_wb_cyc_i),
+	//obsolete: .i1_wb_stb_i(i1_wb_stb_i),
+	//obsolete: .i1_wb_adr_i(i1_wb_adr_i),
+	//obsolete: .i1_wb_sel_i(i1_wb_sel_i),
+	//obsolete: .i1_wb_we_i(i1_wb_we_i),
+	//obsolete: .i1_wb_dat_i(i1_wb_dat_i),
+	//obsolete: .i1_wb_dat_o(yi1_wb_dat_o),
+	//obsolete: .i1_wb_ack_o(yi1_wb_ack_o),
+	//obsolete: .i1_wb_err_o(yi1_wb_err_o),
 
-	.i2_wb_cyc_i(i2_wb_cyc_i),
-	.i2_wb_stb_i(i2_wb_stb_i),
-	.i2_wb_adr_i(i2_wb_adr_i),
-	.i2_wb_sel_i(i2_wb_sel_i),
-	.i2_wb_we_i(i2_wb_we_i),
-	.i2_wb_dat_i(i2_wb_dat_i),
-	.i2_wb_dat_o(yi2_wb_dat_o),
-	.i2_wb_ack_o(yi2_wb_ack_o),
-	.i2_wb_err_o(yi2_wb_err_o),
+	//obsolete: .i2_wb_cyc_i(i2_wb_cyc_i),
+	//obsolete: .i2_wb_stb_i(i2_wb_stb_i),
+	//obsolete: .i2_wb_adr_i(i2_wb_adr_i),
+	//obsolete: .i2_wb_sel_i(i2_wb_sel_i),
+	//obsolete: .i2_wb_we_i(i2_wb_we_i),
+	//obsolete: .i2_wb_dat_i(i2_wb_dat_i),
+	//obsolete: .i2_wb_dat_o(yi2_wb_dat_o),
+	//obsolete: .i2_wb_ack_o(yi2_wb_ack_o),
+	//obsolete: .i2_wb_err_o(yi2_wb_err_o),
 
-	.i3_wb_cyc_i(i3_wb_cyc_i),
-	.i3_wb_stb_i(i3_wb_stb_i),
-	.i3_wb_adr_i(i3_wb_adr_i),
-	.i3_wb_sel_i(i3_wb_sel_i),
-	.i3_wb_we_i(i3_wb_we_i),
-	.i3_wb_dat_i(i3_wb_dat_i),
-	.i3_wb_dat_o(yi3_wb_dat_o),
-	.i3_wb_ack_o(yi3_wb_ack_o),
-	.i3_wb_err_o(yi3_wb_err_o),
+	//obsolete: .i3_wb_cyc_i(i3_wb_cyc_i),
+	//obsolete: .i3_wb_stb_i(i3_wb_stb_i),
+	//obsolete: .i3_wb_adr_i(i3_wb_adr_i),
+	//obsolete: .i3_wb_sel_i(i3_wb_sel_i),
+	//obsolete: .i3_wb_we_i(i3_wb_we_i),
+	//obsolete: .i3_wb_dat_i(i3_wb_dat_i),
+	//obsolete: .i3_wb_dat_o(yi3_wb_dat_o),
+	//obsolete: .i3_wb_ack_o(yi3_wb_ack_o),
+	//obsolete: .i3_wb_err_o(yi3_wb_err_o),
 
 	.i4_wb_cyc_i(i4_wb_cyc_i),
 	.i4_wb_stb_i(i4_wb_stb_i),
@@ -753,25 +753,25 @@ tc_mi_to_st #(t1_addr_w, t1_addr,
 	.i5_wb_ack_o(yi5_wb_ack_o),
 	.i5_wb_err_o(yi5_wb_err_o),
 
-	.i6_wb_cyc_i(i6_wb_cyc_i),
-	.i6_wb_stb_i(i6_wb_stb_i),
-	.i6_wb_adr_i(i6_wb_adr_i),
-	.i6_wb_sel_i(i6_wb_sel_i),
-	.i6_wb_we_i(i6_wb_we_i),
-	.i6_wb_dat_i(i6_wb_dat_i),
-	.i6_wb_dat_o(yi6_wb_dat_o),
-	.i6_wb_ack_o(yi6_wb_ack_o),
-	.i6_wb_err_o(yi6_wb_err_o),
+	//obsolete: .i6_wb_cyc_i(i6_wb_cyc_i),
+	//obsolete: .i6_wb_stb_i(i6_wb_stb_i),
+	//obsolete: .i6_wb_adr_i(i6_wb_adr_i),
+	//obsolete: .i6_wb_sel_i(i6_wb_sel_i),
+	//obsolete: .i6_wb_we_i(i6_wb_we_i),
+	//obsolete: .i6_wb_dat_i(i6_wb_dat_i),
+	//obsolete: .i6_wb_dat_o(yi6_wb_dat_o),
+	//obsolete: .i6_wb_ack_o(yi6_wb_ack_o),
+	//obsolete: .i6_wb_err_o(yi6_wb_err_o),
 
-	.i7_wb_cyc_i(i7_wb_cyc_i),
-	.i7_wb_stb_i(i7_wb_stb_i),
-	.i7_wb_adr_i(i7_wb_adr_i),
-	.i7_wb_sel_i(i7_wb_sel_i),
-	.i7_wb_we_i(i7_wb_we_i),
-	.i7_wb_dat_i(i7_wb_dat_i),
-	.i7_wb_dat_o(yi7_wb_dat_o),
-	.i7_wb_ack_o(yi7_wb_ack_o),
-	.i7_wb_err_o(yi7_wb_err_o),
+	//obsolete: .i7_wb_cyc_i(i7_wb_cyc_i),
+	//obsolete: .i7_wb_stb_i(i7_wb_stb_i),
+	//obsolete: .i7_wb_adr_i(i7_wb_adr_i),
+	//obsolete: .i7_wb_sel_i(i7_wb_sel_i),
+	//obsolete: .i7_wb_we_i(i7_wb_we_i),
+	//obsolete: .i7_wb_dat_i(i7_wb_dat_i),
+	//obsolete: .i7_wb_dat_o(yi7_wb_dat_o),
+	//obsolete: .i7_wb_ack_o(yi7_wb_ack_o),
+	//obsolete: .i7_wb_err_o(yi7_wb_err_o),
 
 	.t0_wb_cyc_o(z_wb_cyc_i),
 	.t0_wb_stb_o(z_wb_stb_i),
