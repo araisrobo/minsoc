@@ -45,7 +45,13 @@ module subsoc_top
   output                    sfifo_rd_o,
   input                     sfifo_empty_i,
   input   [SFIFO_DW-1:0]    sfifo_di,
-  input                     sfifo_bp_tick_i
+  input                     sfifo_bp_tick_i,
+  // GPIO Interface (clk_250)
+  // SYNC_DOUT
+  output  [7:0]             dout_set_o,
+  output  [7:0]             dout_rst_o,
+  // SYNC_DIN
+  input   [15:0]            din_i
 `endif
 
 //
@@ -543,32 +549,40 @@ onchip_ram_top (
 //
 `ifdef SFIFO_IF
 sfifo_if_top #(
-        .WB_LAW         ( 5         ),  // lower address bits
-        .WB_DW          ( 32        ),
-        .SFIFO_DW       ( SFIFO_DW  )   // data width for SYNC_FIFO
+  .WB_AW              ( 5         ),  // lower address bits
+  .WB_DW              ( 32        ),
+  .SFIFO_DW           ( SFIFO_DW  )   // data width for SYNC_FIFO
 ) sfifo_if_top (
 
-	// WISHBONE common
-	.wb_clk_i	( wb_clk ), 
-	.wb_rst_i	( wb_rst ),
+  // WISHBONE common
+  .wb_clk_i	      ( wb_clk ), 
+  .wb_rst_i	      ( wb_rst ),
 
-	// WISHBONE slave
-	.wb_adr_i	( wb_sfifos_adr_i[4:0] ),
-	.wb_dat_i	( wb_sfifos_dat_i      ),
-	.wb_dat_o	( wb_sfifos_dat_o      ),
-	.wb_we_i	( wb_sfifos_we_i       ),
-	.wb_stb_i	( wb_sfifos_stb_i      ),
-	.wb_cyc_i	( wb_sfifos_cyc_i      ),
-	.wb_ack_o	( wb_sfifos_ack_o      ),
-	.wb_sel_i	( wb_sfifos_sel_i      ),
+  // WISHBONE slave
+  .wb_adr_i	      ( wb_sfifos_adr_i[4:2] ),
+  .wb_dat_i	      ( wb_sfifos_dat_i      ),
+  .wb_dat_o	      ( wb_sfifos_dat_o      ),
+  .wb_we_i	      ( wb_sfifos_we_i       ),
+  .wb_stb_i	      ( wb_sfifos_stb_i      ),
+  .wb_cyc_i	      ( wb_sfifos_cyc_i      ),
+  .wb_ack_o	      ( wb_sfifos_ack_o      ),
+  .wb_sel_i	      ( wb_sfifos_sel_i      ),
+
+  // SFIFO Interface (clk_500)
+  .sfifo_rd_o         ( sfifo_rd_o           ),
+  .sfifo_empty_i      ( sfifo_empty_i        ),
+  .sfifo_di           ( sfifo_di             ),
+
+  // SFIFO_CTRL Interface (clk_250)
+  .sfifo_bp_tick_i    ( sfifo_bp_tick_i     ),
   
-        // SFIFO Interface (clk_500)
-        .sfifo_rd_o     ( sfifo_rd_o          ),
-        .sfifo_empty_i  ( sfifo_empty_i       ),
-        .sfifo_di       ( sfifo_di            ),
+  // GPIO Interface (clk_250)
+  // SYNC_DOUT
+  .dout_set_o         ( dout_set_o ),
+  .dout_rst_o         ( dout_rst_o ),
+  // SYNC_DIN
+  .din_i              ( din_i )
 
-        // SFIFO_CTRL Interface (clk_250)
-        .sfifo_bp_tick_i ( sfifo_bp_tick_i      )
 );
 `else
 assign wb_sfifos_dat_o = 32'h0000_0000;
