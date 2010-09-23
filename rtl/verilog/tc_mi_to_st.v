@@ -397,13 +397,13 @@ assign req_i[7] = i7_wb_cyc_i &
 always @(*)
   casez ({req_cont, req_i}) // synopsys parallel_case
     9'b1????????:  req_won <= req_r;
-    9'b000000001:  req_won <= 3'd0;
-    9'b000000010:  req_won <= 3'd1;
-    9'b000000100:  req_won <= 3'd2;
-    9'b000001000:  req_won <= 3'd3;
-    9'b000010000:  req_won <= 3'd4;
-    9'b000100000:  req_won <= 3'd5;
-    9'b001000000:  req_won <= 3'd6;
+    9'b0???????1:  req_won <= 3'd0;
+    9'b0??????10:  req_won <= 3'd1;
+    9'b0?????100:  req_won <= 3'd2;
+    9'b0????1000:  req_won <= 3'd3;
+    9'b0???10000:  req_won <= 3'd4;
+    9'b0??100000:  req_won <= 3'd5;
+    9'b0?1000000:  req_won <= 3'd6;
     9'b010000000:  req_won <= 3'd7;
     default:       req_won <= 3'd0;
   endcase
