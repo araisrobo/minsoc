@@ -81,7 +81,7 @@ begin
     casez (wb_adr_i[`SFIFO_OFS_BITS])  // synopsys parallel_case
       `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
       `SFIFO_CTRL:      wb_dat_o  <= {31'd0, sfifo_empty_i};
-      `SFIFO_DI:        wb_dat_o  <= {16'd0, sfifo_di}; 
+      `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
       `SFIFO_DIN_0:     wb_dat_o  <= {16'd0, din_i};
       default:          wb_dat_o  <= 'bx;
     endcase
@@ -91,7 +91,7 @@ always @(posedge wb_clk_i)
   if (wb_rst_i)
     sfifo_rd_o <= 0;
   else
-    sfifo_rd_o <= sfifo_di_sel & (~sfifo_empty_i);
+    sfifo_rd_o <= sfifo_di_sel & (~sfifo_empty_i) & ~wb_ack_o; // (~wb_ack_o): prevent from reading sfifo twice
 
 // sync from clk_250 to clk_500
 always @ (posedge wb_clk_i)
@@ -119,23 +119,23 @@ always @ (posedge wb_clk_i)
     dout_set_o  <= 0;
     dout_rst_o  <= 0;
   end else if (dout_sel) begin
-    casez (wb_dat_i[7:0]) // synopsys parallel_case
-      8'b1?000000: begin dout_set_o <= {7'h0,  wb_dat_i[6]      };  // dout[0]
-                         dout_rst_o <= {7'h0, ~wb_dat_i[6]      }; end 
-      8'b1?000001: begin dout_set_o <= {6'h0,  wb_dat_i[6], 1'h0}; // dout[1]
-                         dout_rst_o <= {6'h0, ~wb_dat_i[6], 1'h0}; end 
-      8'b1?000010: begin dout_set_o <= {5'h0,  wb_dat_i[6], 2'h0}; // dout[2]
-                         dout_rst_o <= {5'h0, ~wb_dat_i[6], 2'h0}; end      
-      8'b1?000011: begin dout_set_o <= {4'h0,  wb_dat_i[6], 3'h0}; // dout[3]
-                         dout_rst_o <= {4'h0, ~wb_dat_i[6], 3'h0}; end      
-      8'b1?000100: begin dout_set_o <= {3'h0,  wb_dat_i[6], 4'h0}; // dout[4]
-                         dout_rst_o <= {3'h0, ~wb_dat_i[6], 4'h0}; end      
-      8'b1?000101: begin dout_set_o <= {2'h0,  wb_dat_i[6], 5'h0}; // dout[5]
-                         dout_rst_o <= {2'h0, ~wb_dat_i[6], 5'h0}; end      
-      8'b1?000110: begin dout_set_o <= {1'h0,  wb_dat_i[6], 6'h0}; // dout[6]
-                         dout_rst_o <= {1'h0, ~wb_dat_i[6], 6'h0}; end      
-      8'b1?000111: begin dout_set_o <= {       wb_dat_i[6], 7'h0}; // dout[7]
-                         dout_rst_o <= {      ~wb_dat_i[6], 7'h0}; end 
+    casez (wb_dat_i[31:24]) // synopsys parallel_case
+      8'b1?000000: begin dout_set_o <= {7'h0,  wb_dat_i[30]      };  // dout[0]
+                         dout_rst_o <= {7'h0, ~wb_dat_i[30]      }; end 
+      8'b1?000001: begin dout_set_o <= {6'h0,  wb_dat_i[30], 1'h0}; // dout[1]
+                         dout_rst_o <= {6'h0, ~wb_dat_i[30], 1'h0}; end 
+      8'b1?000010: begin dout_set_o <= {5'h0,  wb_dat_i[30], 2'h0}; // dout[2]
+                         dout_rst_o <= {5'h0, ~wb_dat_i[30], 2'h0}; end      
+      8'b1?000011: begin dout_set_o <= {4'h0,  wb_dat_i[30], 3'h0}; // dout[3]
+                         dout_rst_o <= {4'h0, ~wb_dat_i[30], 3'h0}; end      
+      8'b1?000100: begin dout_set_o <= {3'h0,  wb_dat_i[30], 4'h0}; // dout[4]
+                         dout_rst_o <= {3'h0, ~wb_dat_i[30], 4'h0}; end      
+      8'b1?000101: begin dout_set_o <= {2'h0,  wb_dat_i[30], 5'h0}; // dout[5]
+                         dout_rst_o <= {2'h0, ~wb_dat_i[30], 5'h0}; end      
+      8'b1?000110: begin dout_set_o <= {1'h0,  wb_dat_i[30], 6'h0}; // dout[6]
+                         dout_rst_o <= {1'h0, ~wb_dat_i[30], 6'h0}; end      
+      8'b1?000111: begin dout_set_o <= {       wb_dat_i[30], 7'h0}; // dout[7]
+                         dout_rst_o <= {      ~wb_dat_i[30], 7'h0}; end 
       // 8'b0???????: begin dout_set_o <= 8'h00; dout_rst_o <= 8'h00; end  // Disable dout
       default: begin dout_set_o <= 8'h00; dout_rst_o <= 8'h00; end  // Disable dout
     endcase
