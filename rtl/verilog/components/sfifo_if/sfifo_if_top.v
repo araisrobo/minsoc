@@ -12,12 +12,14 @@
 `define SFIFO_DOUT          3'h3
 `define SFIFO_DIN_0         3'b100  // 0x10 ~ 0x13
 `define SFIFO_DIN_1         3'b101  // 0x14 ~ 0x17
+`define SFIFO_ADC_IN        3'b110  // 0x18 ~ 0x19, ADC value input
 
 module sfifo_if_top
 #(
   parameter           WB_AW           = 5,    // lower address bits
   parameter           WB_DW           = 32,
-  parameter           SFIFO_DW        = 16    // data width for SYNC_FIFO
+  parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
+  parameter           ADC_W           = 0     // width for ADC value
 )
 (
   // WISHBONE Interface
@@ -45,7 +47,9 @@ module sfifo_if_top
   output  reg [7:0]                   dout_set_o,
   output  reg [7:0]                   dout_rst_o,
   // SYNC_DIN
-  input       [15:0]                  din_i
+  input       [15:0]                  din_i,
+
+  input       [ADC_W-1:0]             adc_i
 
 );
 
@@ -84,6 +88,7 @@ begin
       `SFIFO_CTRL:      wb_dat_o  <= {31'd0, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
       `SFIFO_DIN_0:     wb_dat_o  <= {16'd0, din_i};
+      `SFIFO_ADC_IN:    wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_i, 16'd0};
       default:          wb_dat_o  <= 'bx;
     endcase
 end

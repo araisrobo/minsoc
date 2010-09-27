@@ -5,7 +5,8 @@ module subsoc_top
 #(
   parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
   parameter           WB_SSIF_AW      = 0,
-  parameter           WB_DW           = 0
+  parameter           WB_DW           = 0,
+  parameter           ADC_W           = 0
 )
 (
   input               clk,
@@ -51,7 +52,9 @@ module subsoc_top
   output  [7:0]             dout_set_o,
   output  [7:0]             dout_rst_o,
   // SYNC_DIN
-  input   [15:0]            din_i
+  input   [15:0]            din_i,
+  // Aanlog to Digital Converter value
+  input   [ADC_W-1:0]       adc_i
 `endif
 
 //
@@ -551,7 +554,8 @@ onchip_ram_top (
 sfifo_if_top #(
   .WB_AW              ( 5         ),  // lower address bits
   .WB_DW              ( 32        ),
-  .SFIFO_DW           ( SFIFO_DW  )   // data width for SYNC_FIFO
+  .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
+  .ADC_W              ( ADC_W     )   // width for ADC value
 ) sfifo_if_top (
 
   // WISHBONE common
@@ -581,8 +585,9 @@ sfifo_if_top #(
   .dout_set_o         ( dout_set_o ),
   .dout_rst_o         ( dout_rst_o ),
   // SYNC_DIN
-  .din_i              ( din_i )
+  .din_i              ( din_i ),
 
+  .adc_i              ( adc_i ) // ADC value
 );
 `else
 assign wb_sfifos_dat_o = 32'h0000_0000;
