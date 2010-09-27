@@ -58,7 +58,8 @@ wire              dout_sel;
 
 // Address decoder
 assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[`SFIFO_OFS_BITS] == `SFIFO_DI);
-assign dout_sel     = wb_cyc_i & wb_stb_i & wb_we_i & wb_sel_i[0] & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT);
+                      // wb_sel_i[3]: byte 0
+assign dout_sel     = wb_cyc_i & wb_stb_i & wb_we_i & wb_sel_i[3] & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT);
    
 // Wb acknowledge
 always @(posedge wb_clk_i)
