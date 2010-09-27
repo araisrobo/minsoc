@@ -58,7 +58,11 @@ wire              bp_pulser;
 reg               bp_tick_n;
 reg [WB_DW-1:0]   bp_tick_cnt;
 wire              sfifo_di_sel;
+
+// signals for SYNC_DOUT
 wire              dout_sel;
+reg [7:0]         dout_set;   // to hold non-synchronized signal
+reg [7:0]         dout_rst;   // to hold non-synchronized signal
 
 // Address decoder
 assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[`SFIFO_OFS_BITS] == `SFIFO_DI);
@@ -120,30 +124,36 @@ always @ (posedge wb_clk_i)
   else if (bp_pulser)
     bp_tick_cnt <= bp_tick_cnt + 1;
 
+// to synchronize DOUT with Base Period Pulser
+always @ (posedge wb_clk_i)
+  if (bp_pulser) begin
+    dout_set_o <= dout_set;
+    dout_rst_o <= dout_rst;
+  end
+  
 always @ (posedge wb_clk_i)
   if (wb_rst_i) begin
-    dout_set_o  <= 0;
-    dout_rst_o  <= 0;
+    dout_set  <= 0;
+    dout_rst  <= 0;
   end else if (dout_sel) begin
     casez (wb_dat_i[31:24]) // synopsys parallel_case
-      8'b1?000000: begin dout_set_o <= {7'h0,  wb_dat_i[30]      };  // dout[0]
-                         dout_rst_o <= {7'h0, ~wb_dat_i[30]      }; end 
-      8'b1?000001: begin dout_set_o <= {6'h0,  wb_dat_i[30], 1'h0}; // dout[1]
-                         dout_rst_o <= {6'h0, ~wb_dat_i[30], 1'h0}; end 
-      8'b1?000010: begin dout_set_o <= {5'h0,  wb_dat_i[30], 2'h0}; // dout[2]
-                         dout_rst_o <= {5'h0, ~wb_dat_i[30], 2'h0}; end      
-      8'b1?000011: begin dout_set_o <= {4'h0,  wb_dat_i[30], 3'h0}; // dout[3]
-                         dout_rst_o <= {4'h0, ~wb_dat_i[30], 3'h0}; end      
-      8'b1?000100: begin dout_set_o <= {3'h0,  wb_dat_i[30], 4'h0}; // dout[4]
-                         dout_rst_o <= {3'h0, ~wb_dat_i[30], 4'h0}; end      
-      8'b1?000101: begin dout_set_o <= {2'h0,  wb_dat_i[30], 5'h0}; // dout[5]
-                         dout_rst_o <= {2'h0, ~wb_dat_i[30], 5'h0}; end      
-      8'b1?000110: begin dout_set_o <= {1'h0,  wb_dat_i[30], 6'h0}; // dout[6]
-                         dout_rst_o <= {1'h0, ~wb_dat_i[30], 6'h0}; end      
-      8'b1?000111: begin dout_set_o <= {       wb_dat_i[30], 7'h0}; // dout[7]
-                         dout_rst_o <= {      ~wb_dat_i[30], 7'h0}; end 
-      // 8'b0???????: begin dout_set_o <= 8'h00; dout_rst_o <= 8'h00; end  // Disable dout
-      default: begin dout_set_o <= 8'h00; dout_rst_o <= 8'h00; end  // Disable dout
+      8'b1?000000: begin dout_set <= {7'h0,  wb_dat_i[30]      };  // dout[0]
+                         dout_rst <= {7'h0, ~wb_dat_i[30]      }; end 
+      8'b1?000001: begin dout_set <= {6'h0,  wb_dat_i[30], 1'h0}; // dout[1]
+                         dout_rst <= {6'h0, ~wb_dat_i[30], 1'h0}; end 
+      8'b1?000010: begin dout_set <= {5'h0,  wb_dat_i[30], 2'h0}; // dout[2]
+                         dout_rst <= {5'h0, ~wb_dat_i[30], 2'h0}; end      
+      8'b1?000011: begin dout_set <= {4'h0,  wb_dat_i[30], 3'h0}; // dout[3]
+                         dout_rst <= {4'h0, ~wb_dat_i[30], 3'h0}; end      
+      8'b1?000100: begin dout_set <= {3'h0,  wb_dat_i[30], 4'h0}; // dout[4]
+                         dout_rst <= {3'h0, ~wb_dat_i[30], 4'h0}; end      
+      8'b1?000101: begin dout_set <= {2'h0,  wb_dat_i[30], 5'h0}; // dout[5]
+                         dout_rst <= {2'h0, ~wb_dat_i[30], 5'h0}; end      
+      8'b1?000110: begin dout_set <= {1'h0,  wb_dat_i[30], 6'h0}; // dout[6]
+                         dout_rst <= {1'h0, ~wb_dat_i[30], 6'h0}; end      
+      8'b1?000111: begin dout_set <= {       wb_dat_i[30], 7'h0}; // dout[7]
+                         dout_rst <= {      ~wb_dat_i[30], 7'h0}; end 
+      default: begin     dout_set <= 8'h00;    dout_rst <= 8'h00; end  // Disable dout
     endcase
   end
     
