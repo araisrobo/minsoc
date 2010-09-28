@@ -161,7 +161,8 @@ begin
                          next_dout_rst <= {1'h0, ~wb_dat_i[30], 6'h0}; end      
       8'b1?000111: begin next_dout_set <= {       wb_dat_i[30], 7'h0}; // dout[7]
                          next_dout_rst <= {      ~wb_dat_i[30], 7'h0}; end 
-      default: begin     next_dout_set <= 8'h00;    dout_rst <= 8'h00; end  // Disable dout
+      default:     begin next_dout_set <= 8'h00;                       // Disable dout
+                         next_dout_rst <= 8'h00;                       end
     endcase
 end    
 
