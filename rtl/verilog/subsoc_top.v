@@ -6,6 +6,7 @@ module subsoc_top
   parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
   parameter           WB_SSIF_AW      = 0,
   parameter           WB_DW           = 0,
+  parameter           WOU_DW          = 0,
   parameter           ADC_W           = 0
 )
 (
@@ -41,9 +42,10 @@ module subsoc_top
 //
 // SFIFO_IF (sync fofo interface)
 //
-`ifdef SFIFO_IF
+// `ifdef SFIFO_IF
   ,
   output                    sfifo_rd_o,
+  input                     sfifo_full_i,
   input                     sfifo_empty_i,
   input   [SFIFO_DW-1:0]    sfifo_di,
   input                     sfifo_bp_tick_i,
@@ -54,8 +56,13 @@ module subsoc_top
   // SYNC_DIN
   input   [15:0]            din_i,
   // Aanlog to Digital Converter value
-  input   [ADC_W-1:0]       adc_i
-`endif
+  input   [ADC_W-1:0]       adc_i,
+  
+  // MAILBOX Interface (clk_500)
+  output                    mbox_wr_o,
+  output  [WOU_DW-1:0]      mbox_do_o,
+  input                     mbox_full_i
+// `endif
 
 //
 // SSIF (Servo/Stepper InterFace)
@@ -550,10 +557,11 @@ onchip_ram_top (
 //
 // Instantiation of the SFIFO_IF
 //
-`ifdef SFIFO_IF
+// `ifdef SFIFO_IF
 sfifo_if_top #(
   .WB_AW              ( 5         ),  // lower address bits
   .WB_DW              ( 32        ),
+  .WOU_DW             ( WOU_DW    ),  // WOU data bus width
   .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
   .ADC_W              ( ADC_W     )   // width for ADC value
 ) sfifo_if_top (
@@ -574,8 +582,14 @@ sfifo_if_top #(
 
   // SFIFO Interface (clk_500)
   .sfifo_rd_o         ( sfifo_rd_o           ),
+  .sfifo_full_i       ( sfifo_full_i         ),
   .sfifo_empty_i      ( sfifo_empty_i        ),
   .sfifo_di           ( sfifo_di             ),
+  
+  // MAILBOX Interface (clk_500)
+  .mbox_wr_o          ( mbox_wr_o ),
+  .mbox_do_o          ( mbox_do_o ),
+  .mbox_full_i        ( mbox_full_i ),
 
   // SFIFO_CTRL Interface (clk_250)
   .sfifo_bp_tick_i    ( sfifo_bp_tick_i     ),
@@ -589,10 +603,10 @@ sfifo_if_top #(
 
   .adc_i              ( adc_i ) // ADC value
 );
-`else
-assign wb_sfifos_dat_o = 32'h0000_0000;
-assign wb_sfifos_ack_o = 1'b0;
-`endif
+// `else
+// assign wb_sfifos_dat_o = 32'h0000_0000;
+// assign wb_sfifos_ack_o = 1'b0;
+// `endif
 
 //
 // Instantiation of the UART16550

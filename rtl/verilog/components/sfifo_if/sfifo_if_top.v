@@ -1,7 +1,7 @@
 //
 // Bits of WISHBONE address used for partial decoding of SPI registers.
 //
-`define SFIFO_OFS_BITS	    4:2
+// `define SFIFO_OFS_BITS	    4:2
 
 //
 // Register offset
@@ -13,11 +13,13 @@
 `define SFIFO_DIN_0         3'b100  // 0x10 ~ 0x13
 `define SFIFO_DIN_1         3'b101  // 0x14 ~ 0x17
 `define SFIFO_ADC_IN        3'b110  // 0x18 ~ 0x19, ADC value input
+`define MAILBOX_WR          3'b111  // 0x1C ~ 0x1F, write data to MAILBOX
 
 module sfifo_if_top
 #(
   parameter           WB_AW           = 5,    // lower address bits
   parameter           WB_DW           = 32,
+  parameter           WOU_DW          = 0,
   parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
   parameter           ADC_W           = 0     // width for ADC value
 )
@@ -36,8 +38,14 @@ module sfifo_if_top
 
   // SFIFO Interface (clk_500)
   output  reg                         sfifo_rd_o,
+  input                               sfifo_full_i,
   input                               sfifo_empty_i,
   input   [SFIFO_DW-1:0]              sfifo_di,
+
+  // MAILBOX Interface (clk_500)
+  output                              mbox_wr_o,
+  output  [WOU_DW-1:0]                mbox_do_o,
+  input                               mbox_full_i,
 
   // SFIFO_CTRL Interface (clk_250)
   input                               sfifo_bp_tick_i,
@@ -48,7 +56,8 @@ module sfifo_if_top
   output  reg [7:0]                   dout_rst_o,
   // SYNC_DIN
   input       [15:0]                  din_i,
-
+  
+  // ADC_SPI value (clk_250)
   input       [ADC_W-1:0]             adc_i
 
 );
@@ -66,10 +75,22 @@ reg [7:0]         dout_rst;   // to hold non-synchronized signal
 reg [7:0]         next_dout_set;   // to hold non-synchronized signal
 reg [7:0]         next_dout_rst;   // to hold non-synchronized signal
 
+// signals for MAILBOX
+wire              mbox_wr_sel;
+wire              mbox_busy;
+reg [WB_DW-1:0]   next_mbox_buf;
+reg [WB_DW-1:0]   mbox_buf;
+reg [2:0]         mbox_shift;
+reg               mbox_cs;
+reg               mbox_ns;
+parameter         MBOX_IDLE   = 1'b0,
+                  MBOX_WR     = 1'b1;
+
 // Address decoder
-assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[`SFIFO_OFS_BITS] == `SFIFO_DI);
+assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
                       // wb_sel_i[3]: byte 0
 assign dout_sel     = wb_cyc_i & wb_stb_i & wb_we_i & wb_sel_i[3] & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT);
+assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_WR);
    
 // Wb acknowledge
 always @(posedge wb_clk_i)
@@ -79,7 +100,9 @@ begin
   else
     wb_ack_o <= wb_cyc_i & wb_stb_i & ~wb_ack_o 
                 // block wb_ack_o if (sfifo_di_sel && sfifo_empty) 
-                & ~(sfifo_di_sel & sfifo_empty_i);
+                & ~(sfifo_di_sel & sfifo_empty_i)
+                // block wb_ack_o if (mbox_wr_sel && ...) 
+                & ~(mbox_wr_sel & (mbox_full_i | mbox_busy)) ;
 end
    
 // Read from registers
@@ -89,9 +112,9 @@ begin
   if (wb_rst_i)
     wb_dat_o <= 32'b0;
   else
-    casez (wb_adr_i[`SFIFO_OFS_BITS])  // synopsys parallel_case
+    casez (wb_adr_i[WB_AW-1:2])  // synopsys parallel_case
       `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
-      `SFIFO_CTRL:      wb_dat_o  <= {31'd0, sfifo_empty_i};
+      `SFIFO_CTRL:      wb_dat_o  <= {31'd0, mbox_full_i, sfifo_full_i, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
       `SFIFO_DIN_0:     wb_dat_o  <= {16'd0, din_i};
       `SFIFO_ADC_IN:    wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_i, 16'd0};
@@ -165,5 +188,60 @@ begin
                          next_dout_rst <= 8'h00;                       end
     endcase
 end    
+
+
+// begin: write to MAILBOX
+  
+assign mbox_busy = (mbox_cs == MBOX_WR);
+assign mbox_wr_o = (~mbox_full_i) & (mbox_cs == MBOX_WR);
+assign mbox_do_o = mbox_buf[31:24];
+
+always @(*)
+  if (mbox_cs == MBOX_IDLE)
+    next_mbox_buf <= wb_dat_i;
+  else
+    next_mbox_buf <= {mbox_buf[23:0], 8'h00};
+
+always @(posedge wb_clk_i)
+  if (wb_rst_i)
+    mbox_buf    <= 0;
+  else if (~mbox_full_i)
+    mbox_buf    <= next_mbox_buf;
+
+always @(posedge wb_clk_i)
+  if (mbox_cs == MBOX_IDLE)
+    mbox_shift  <= 3'b111;
+  else if (~mbox_full_i)
+    mbox_shift  <= {mbox_shift[1:0], 1'b0};
+
+always @(posedge wb_clk_i)
+  if (wb_rst_i)
+    mbox_cs <= MBOX_IDLE;
+  else
+    mbox_cs <= mbox_ns;
+
+always @(*)
+begin
+  case (mbox_cs) // synopsys parallel_case
+    MBOX_IDLE: begin
+      // load wb_dat_i into mbox_buf at this state 
+      if (mbox_wr_sel & (~mbox_full_i))
+        mbox_ns <= MBOX_WR;
+      else
+        mbox_ns <= MBOX_IDLE;
+    end
+
+    MBOX_WR: begin
+      if (mbox_shift[2] == 1'b0)
+        mbox_ns <= MBOX_IDLE;
+      else
+        mbox_ns <= MBOX_WR;
+    end
+
+    default: mbox_ns <= 'bx;
+  endcase
+end
+
+// end: write to MAILBOX
 
 endmodule
