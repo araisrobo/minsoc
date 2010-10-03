@@ -13,7 +13,7 @@
 `define SFIFO_DIN_0         3'b100  // 0x10 ~ 0x13
 `define SFIFO_DIN_1         3'b101  // 0x14 ~ 0x17
 `define SFIFO_ADC_IN        3'b110  // 0x18 ~ 0x19, ADC value input
-`define MAILBOX_WR          3'b111  // 0x1C ~ 0x1F, write data to MAILBOX
+`define MAILBOX_OBUF        3'b111  // 0x1C ~ 0x1F, output data buffer to MAILBOX
 
 module sfifo_if_top
 #(
@@ -90,7 +90,7 @@ parameter         MBOX_IDLE   = 1'b0,
 assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
                       // wb_sel_i[3]: byte 0
 assign dout_sel     = wb_cyc_i & wb_stb_i & wb_we_i & wb_sel_i[3] & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT);
-assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_WR);
+assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
    
 // Wb acknowledge
 always @(posedge wb_clk_i)
@@ -192,15 +192,19 @@ end
 
 // begin: write to MAILBOX
   
+/**
+ *  - to convert mbox_buf[] from big-endian to little-endian for WOU
+ *
+ **/
 assign mbox_busy = (mbox_cs == MBOX_WR);
 assign mbox_wr_o = (~mbox_full_i) & (mbox_cs == MBOX_WR);
-assign mbox_do_o = mbox_buf[31:24];
+assign mbox_do_o = mbox_buf[7:0]; // least-significant-byte first
 
 always @(*)
   if (mbox_cs == MBOX_IDLE)
     next_mbox_buf <= wb_dat_i;
   else
-    next_mbox_buf <= {mbox_buf[23:0], 8'h00};
+    next_mbox_buf <= {8'h00, mbox_buf[31:8]};
 
 always @(posedge wb_clk_i)
   if (wb_rst_i)
