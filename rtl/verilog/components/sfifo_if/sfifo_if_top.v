@@ -236,7 +236,7 @@ begin
     end
 
     MBOX_WR: begin
-      if (mbox_shift[2] == 1'b0)
+      if ((mbox_shift[2] == 1'b0) & (~mbox_full_i))
         mbox_ns <= MBOX_IDLE;
       else
         mbox_ns <= MBOX_WR;
