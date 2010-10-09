@@ -61,7 +61,8 @@ module subsoc_top
   // MAILBOX Interface (clk_500)
   output                    mbox_wr_o,
   output  [WOU_DW-1:0]      mbox_do_o,
-  input                     mbox_full_i
+  input                     mbox_full_i,
+  input                     mbox_afull_i
 // `endif
 
 //
@@ -590,6 +591,7 @@ sfifo_if_top #(
   .mbox_wr_o          ( mbox_wr_o ),
   .mbox_do_o          ( mbox_do_o ),
   .mbox_full_i        ( mbox_full_i ),
+  .mbox_afull_i       ( mbox_afull_i ),
 
   // SFIFO_CTRL Interface (clk_250)
   .sfifo_bp_tick_i    ( sfifo_bp_tick_i     ),
