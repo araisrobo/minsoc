@@ -69,6 +69,10 @@ reg               bp_tick_n;
 reg [WB_DW-1:0]   bp_tick_cnt;
 wire              sfifo_di_sel;
 
+// to synchronize data from clk_250 to clk_500
+reg [15:0]        din_s;
+reg [ADC_W-1:0]   adc_s;
+
 // signals for SYNC_DOUT
 wire              dout_sel;
 reg [7:0]         dout_set;   // to hold non-synchronized signal
@@ -117,8 +121,8 @@ begin
       `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
       `SFIFO_CTRL:      wb_dat_o  <= {28'd0, mbox_afull_i, mbox_full_i, sfifo_full_i, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
-      `SFIFO_DIN_0:     wb_dat_o  <= {16'd0, din_i};
-      `SFIFO_ADC_IN:    wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_i, 16'd0};
+      `SFIFO_DIN_0:     wb_dat_o  <= {16'd0, din_s};
+      `SFIFO_ADC_IN:    wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_s, 16'd0};
       default:          wb_dat_o  <= 'bx;
     endcase
 end
@@ -189,6 +193,16 @@ begin
                          next_dout_rst <= 8'h00;                       end
     endcase
 end    
+
+// to synchronize from clk_250 to clk_500
+always @(posedge wb_clk_i)
+  if (wb_rst_i) begin
+    adc_s     <= 0;
+    din_s     <= 0;
+  end else begin
+    adc_s     <= adc_i;
+    din_s     <= din_i;
+  end
 
 
 // begin: write to MAILBOX
