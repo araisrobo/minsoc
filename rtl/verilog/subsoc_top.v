@@ -19,26 +19,6 @@ module subsoc_top
   input   [31:0]      or32_prog_data_i,   // data for OR32_PROG
   input               or32_prog_en_i      // (1)prog addr,data to OR32
   
-  //
-  // SPI controller external i/f wires
-  //
-`ifdef START_UP
-  ,
-  output              spi_flash_mosi,
-  input               spi_flash_miso,
-  output              spi_flash_sclk,
-  output [1:0]        spi_flash_ss
-`endif
-
-//
-// UART
-//
-`ifdef UART
-  ,
-  output [7:0]        uusb_dat_o,
-  input  [7:0]        uusb_dat_i 
-`endif
-
 //
 // SFIFO_IF (sync fofo interface)
 //
@@ -68,7 +48,7 @@ module subsoc_top
 //
 // SSIF (Servo/Stepper InterFace)
 //
-`ifdef SSIF
+// `ifdef SSIF
   ,
   // WISHBONE Interface 1
   output                    wb_ssif_stb_o,
@@ -80,7 +60,7 @@ module subsoc_top
   input   [WB_DW-1:0]       wb_ssif_dat_i,
   input                     wb_ssif_ack_i,
   input                     wb_ssif_err_i
-`endif
+// `endif
 
 );
 
@@ -613,66 +593,13 @@ sfifo_if_top #(
 //
 // Instantiation of the UART16550
 //
-`ifdef UART
-uusb_top uusb_top (
-
-	// WISHBONE common
-	.wb_clk_i	( wb_clk ), 
-	.wb_rst_i	( wb_rst ),
-
-	// WISHBONE slave
-	.wb_adr_i	( wb_us_adr_i[4:0] ),
-	.wb_dat_i	( wb_us_dat_i ),
-	.wb_dat_o	( wb_us_dat_o ),
-	.wb_we_i	( wb_us_we_i  ),
-	.wb_stb_i	( wb_us_stb_i ),
-	.wb_cyc_i	( wb_us_cyc_i ),
-	.wb_ack_o	( wb_us_ack_o ),
-	.wb_sel_i	( wb_us_sel_i ),
-
-	// UART signals
-	// serial input/output
-	.uusb_dat_o	( uusb_dat_o ),
-	.uusb_dat_i	( uusb_dat_i )
-);
-// uart_top uart_top (
-// 
-// 	// WISHBONE common
-// 	.wb_clk_i	( wb_clk ), 
-// 	.wb_rst_i	( wb_rst ),
-// 
-// 	// WISHBONE slave
-// 	.wb_adr_i	( wb_us_adr_i[4:0] ),
-// 	.wb_dat_i	( wb_us_dat_i ),
-// 	.wb_dat_o	( wb_us_dat_o ),
-// 	.wb_we_i	( wb_us_we_i  ),
-// 	.wb_stb_i	( wb_us_stb_i ),
-// 	.wb_cyc_i	( wb_us_cyc_i ),
-// 	.wb_ack_o	( wb_us_ack_o ),
-// 	.wb_sel_i	( wb_us_sel_i ),
-// 
-// 	// Interrupt request
-// 	.int_o		( pic_ints[`APP_INT_UART] ),
-// 
-// 	// UART signals
-// 	// serial input/output
-// 	.stx_pad_o	( uart_stx ),
-// 	.srx_pad_i	( uart_srx ),
-// 
-// 	// modem signals
-// 	.rts_pad_o	( ),
-// 	.cts_pad_i	( 1'b0 ),
-// 	.dtr_pad_o	( ),
-// 	.dsr_pad_i	( 1'b0 ),
-// 	.ri_pad_i	( 1'b0 ),
-// 	.dcd_pad_i	( 1'b0 )
-// );
-`else
+// `ifdef UART
+// `else
 assign wb_us_dat_o = 32'h0000_0000;
 assign wb_us_ack_o = 1'b0;
 
 assign pic_ints[`APP_INT_UART] = 1'b0;
-`endif
+// `endif
 
 //
 // Instantiation of the Ethernet 10/100 MAC
