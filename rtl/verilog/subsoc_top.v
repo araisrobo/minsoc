@@ -7,6 +7,8 @@ module subsoc_top
   parameter           WB_SSIF_AW      = 0,
   parameter           WB_DW           = 0,
   parameter           WOU_DW          = 0,
+  // parameter           DIN_W           = 16,
+  parameter           DOUT_W          = 8,
   parameter           ADC_W           = 0
 )
 (
@@ -31,12 +33,32 @@ module subsoc_top
   input                     sfifo_bp_tick_i,
   // GPIO Interface (clk_250)
   // SYNC_DOUT
-  output  [7:0]             dout_set_o,
-  output  [7:0]             dout_rst_o,
+  output  [DOUT_W-1:0]      dout_o,
+  output                    dout_we_o,
+  input   [DOUT_W-1:0]      dout_i,
+//obsolete:  output  [DOUT_W-1:0]      dout_set_o,
+//obsolete:  output  [DOUT_W-1:0]      dout_rst_o,
   // SYNC_DIN
-  input   [15:0]            din_i,
-  // Aanlog to Digital Converter value
-  input   [ADC_W-1:0]       adc_i,
+  input   [31:0]            din_0_i,
+  input   [31:0]            din_1_i,
+
+  // Aanlog to Digital Converter Inputs
+  input   [ADC_W-1:0]       adc_0_i,
+  input   [ADC_W-1:0]       adc_1_i,
+  input   [ADC_W-1:0]       adc_2_i,
+  input   [ADC_W-1:0]       adc_3_i,
+  input   [ADC_W-1:0]       adc_4_i,
+  input   [ADC_W-1:0]       adc_5_i,
+  input   [ADC_W-1:0]       adc_6_i,
+  input   [ADC_W-1:0]       adc_7_i,
+  input   [ADC_W-1:0]       adc_8_i,
+  input   [ADC_W-1:0]       adc_9_i,
+  input   [ADC_W-1:0]       adc_10_i,
+  input   [ADC_W-1:0]       adc_11_i,
+  input   [ADC_W-1:0]       adc_12_i,
+  input   [ADC_W-1:0]       adc_13_i,
+  input   [ADC_W-1:0]       adc_14_i,
+  input   [ADC_W-1:0]       adc_15_i,
   
   // MAILBOX Interface (clk_500)
   output                    mbox_wr_o,
@@ -538,12 +560,13 @@ onchip_ram_top (
 //
 // Instantiation of the SFIFO_IF
 //
-// `ifdef SFIFO_IF
 sfifo_if_top #(
-  .WB_AW              ( 5         ),  // lower address bits
+  .WB_AW              ( 6         ),  // lower address bits
   .WB_DW              ( 32        ),
   .WOU_DW             ( WOU_DW    ),  // WOU data bus width
   .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
+  .DOUT_W             ( DOUT_W    ),
+  // .DIN_W              ( DIN_W     ),
   .ADC_W              ( ADC_W     )   // width for ADC value
 ) sfifo_if_top (
 
@@ -552,7 +575,7 @@ sfifo_if_top #(
   .wb_rst_i	      ( wb_rst ),
 
   // WISHBONE slave
-  .wb_adr_i	      ( wb_sfifos_adr_i[4:2] ),
+  .wb_adr_i	      ( wb_sfifos_adr_i[5:2] ),
   .wb_dat_i	      ( wb_sfifos_dat_i      ),
   .wb_dat_o	      ( wb_sfifos_dat_o      ),
   .wb_we_i	      ( wb_sfifos_we_i       ),
@@ -578,17 +601,31 @@ sfifo_if_top #(
   
   // GPIO Interface (clk_250)
   // SYNC_DOUT
-  .dout_set_o         ( dout_set_o ),
-  .dout_rst_o         ( dout_rst_o ),
+  .dout_o             ( dout_o ),
+  .dout_we_o          ( dout_we_o ),
+  .dout_i             ( dout_i ),
   // SYNC_DIN
-  .din_i              ( din_i ),
+  .din_0_i            ( din_0_i ),
+  .din_1_i            ( din_1_i ),
 
-  .adc_i              ( adc_i ) // ADC value
+  // ADC Input
+  .adc_0_i            ( adc_0_i ),
+  .adc_1_i            ( adc_1_i ),
+  .adc_2_i            ( adc_2_i ),
+  .adc_3_i            ( adc_3_i ),
+  .adc_4_i            ( adc_4_i ),
+  .adc_5_i            ( adc_5_i ),
+  .adc_6_i            ( adc_6_i ),
+  .adc_7_i            ( adc_7_i ),
+  .adc_8_i            ( adc_8_i ),
+  .adc_9_i            ( adc_9_i ),
+  .adc_10_i           ( adc_10_i ),
+  .adc_11_i           ( adc_11_i ),
+  .adc_12_i           ( adc_12_i ),
+  .adc_13_i           ( adc_13_i ),
+  .adc_14_i           ( adc_14_i ),
+  .adc_15_i           ( adc_15_i )
 );
-// `else
-// assign wb_sfifos_dat_o = 32'h0000_0000;
-// assign wb_sfifos_ack_o = 1'b0;
-// `endif
 
 //
 // Instantiation of the UART16550
