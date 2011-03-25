@@ -14,22 +14,31 @@
 // For SFIFO_ADC_?: 
 // ignore MSB of WB_ADR[] since it must be '1'
 // add detection for wb_sel_i[1] for REG16() accessing
-`define SFIFO_ADC_0         4'h0    
-`define SFIFO_ADC_1         4'h1 
-`define SFIFO_ADC_2         4'h2 
-`define SFIFO_ADC_3         4'h3 
-`define SFIFO_ADC_4         4'h4 
-`define SFIFO_ADC_5         4'h5 
-`define SFIFO_ADC_6         4'h6 
-`define SFIFO_ADC_7         4'h7 
-`define SFIFO_ADC_8         4'h8 
-`define SFIFO_ADC_9         4'h9 
-`define SFIFO_ADC_10        4'ha
-`define SFIFO_ADC_11        4'hb
-`define SFIFO_ADC_12        4'hc
-`define SFIFO_ADC_13        4'hd
-`define SFIFO_ADC_14        4'he
-`define SFIFO_ADC_15        4'hf
+// `define SFIFO_ADC_0         4'h0    
+// `define SFIFO_ADC_1         4'h1 
+// `define SFIFO_ADC_2         4'h2 
+// `define SFIFO_ADC_3         4'h3 
+// `define SFIFO_ADC_4         4'h4 
+// `define SFIFO_ADC_5         4'h5 
+// `define SFIFO_ADC_6         4'h6 
+// `define SFIFO_ADC_7         4'h7 
+// `define SFIFO_ADC_8         4'h8 
+// `define SFIFO_ADC_9         4'h9 
+// `define SFIFO_ADC_10        4'ha
+// `define SFIFO_ADC_11        4'hb
+// `define SFIFO_ADC_12        4'hc
+// `define SFIFO_ADC_13        4'hd
+// `define SFIFO_ADC_14        4'he
+// `define SFIFO_ADC_15        4'hf
+
+`define SFIFO_ADC_01        3'h0    
+`define SFIFO_ADC_23        3'h1 
+`define SFIFO_ADC_45        3'h2 
+`define SFIFO_ADC_67        3'h3 
+`define SFIFO_ADC_89        3'h4 
+`define SFIFO_ADC_AB        3'h5 
+`define SFIFO_ADC_CD        3'h6 
+`define SFIFO_ADC_EF        3'h7 
 
 module sfifo_if_top
 #(
@@ -109,11 +118,11 @@ wire              sfifo_di_sel;
 
 // signals for SYNC_DOUT
 wire              dout_wr_sel;
-reg [DOUT_W-1:0]  dout_tmp;   
 reg               dout_we;
 
 // signals for ADC input
-reg [ADC_W-1:0]   adc;
+reg [ADC_W-1:0]   adc_lo;
+reg [ADC_W-1:0]   adc_hi;
 
 // signals for MAILBOX
 wire              mbox_wr_sel;
@@ -131,7 +140,22 @@ assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
 // wb_sel_i[3]: byte 0
 assign dout_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT);
 assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
-   
+
+//**********************************************************************************
+// Code for simulation purposes only 
+//**********************************************************************************
+//synopsys translate_off
+
+wire adc_rd_sel;
+assign adc_rd_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1] == 1'b1);
+
+//synopsys translate_on
+//**********************************************************************************
+// End of simulation code.
+//**********************************************************************************
+
+
+
 // Wb acknowledge
 always @(posedge wb_clk_i)
 begin
@@ -146,26 +170,40 @@ begin
 end
 
 // mux for ADC inputs
+//orig: always @(*)
+//orig: begin
+//orig:   casez ({wb_adr_i[WB_AW-2:2], wb_sel_i[1]})  // synopsys parallel_case
+//orig:     `SFIFO_ADC_0:     adc <= adc_0_i;
+//orig:     `SFIFO_ADC_1:     adc <= adc_1_i;
+//orig:     `SFIFO_ADC_2:     adc <= adc_2_i;
+//orig:     `SFIFO_ADC_3:     adc <= adc_3_i;
+//orig:     `SFIFO_ADC_4:     adc <= adc_4_i;
+//orig:     `SFIFO_ADC_5:     adc <= adc_5_i;
+//orig:     `SFIFO_ADC_6:     adc <= adc_6_i;
+//orig:     `SFIFO_ADC_7:     adc <= adc_7_i;
+//orig:     `SFIFO_ADC_8:     adc <= adc_8_i;
+//orig:     `SFIFO_ADC_9:     adc <= adc_9_i;
+//orig:     `SFIFO_ADC_10:    adc <= adc_10_i;
+//orig:     `SFIFO_ADC_11:    adc <= adc_11_i;
+//orig:     `SFIFO_ADC_12:    adc <= adc_12_i;
+//orig:     `SFIFO_ADC_13:    adc <= adc_13_i;
+//orig:     `SFIFO_ADC_14:    adc <= adc_14_i;
+//orig:     `SFIFO_ADC_15:    adc <= adc_15_i;
+//orig:     default:          adc <= 'bx;
+//orig:   endcase
+//orig: end
 always @(*)
 begin
-  casez ({wb_adr_i[WB_AW-2:2], wb_sel_i[1]})  // synopsys parallel_case
-    `SFIFO_ADC_0:     adc <= adc_0_i;
-    `SFIFO_ADC_1:     adc <= adc_1_i;
-    `SFIFO_ADC_2:     adc <= adc_2_i;
-    `SFIFO_ADC_3:     adc <= adc_3_i;
-    `SFIFO_ADC_4:     adc <= adc_4_i;
-    `SFIFO_ADC_5:     adc <= adc_5_i;
-    `SFIFO_ADC_6:     adc <= adc_6_i;
-    `SFIFO_ADC_7:     adc <= adc_7_i;
-    `SFIFO_ADC_8:     adc <= adc_8_i;
-    `SFIFO_ADC_9:     adc <= adc_9_i;
-    `SFIFO_ADC_10:    adc <= adc_10_i;
-    `SFIFO_ADC_11:    adc <= adc_11_i;
-    `SFIFO_ADC_12:    adc <= adc_12_i;
-    `SFIFO_ADC_13:    adc <= adc_13_i;
-    `SFIFO_ADC_14:    adc <= adc_14_i;
-    `SFIFO_ADC_15:    adc <= adc_15_i;
-    default:          adc <= 'bx;
+  casez ({wb_adr_i[WB_AW-2:2]})  // synopsys parallel_case
+    `SFIFO_ADC_01:  begin adc_lo <= adc_0_i;  adc_hi <= adc_1_i;  end
+    `SFIFO_ADC_23:  begin adc_lo <= adc_2_i;  adc_hi <= adc_3_i;  end
+    `SFIFO_ADC_45:  begin adc_lo <= adc_4_i;  adc_hi <= adc_5_i;  end
+    `SFIFO_ADC_67:  begin adc_lo <= adc_6_i;  adc_hi <= adc_7_i;  end
+    `SFIFO_ADC_89:  begin adc_lo <= adc_8_i;  adc_hi <= adc_9_i;  end
+    `SFIFO_ADC_AB:  begin adc_lo <= adc_10_i; adc_hi <= adc_11_i; end
+    `SFIFO_ADC_CD:  begin adc_lo <= adc_12_i; adc_hi <= adc_13_i; end
+    `SFIFO_ADC_EF:  begin adc_lo <= adc_14_i; adc_hi <= adc_15_i; end
+    default:        begin adc_lo <= 'bx;      adc_hi <= 'bx; end
   endcase
 end
 
@@ -183,7 +221,7 @@ begin
       `SFIFO_DOUT:      wb_dat_o  <= {{(32-DOUT_W){1'b0}}, dout_i};
       `SFIFO_DIN_0:     wb_dat_o  <= {din_0_i};
       `SFIFO_DIN_1:     wb_dat_o  <= {din_1_i};
-      `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc, 16'h00};
+      `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_lo, {(16-ADC_W){1'b0}}, adc_hi};
       default:          wb_dat_o  <= 'bx;
     endcase
 end
@@ -215,26 +253,21 @@ always @ (posedge wb_clk_i)
   else if (bp_pulser)
     bp_tick_cnt <= bp_tick_cnt + 1;
 
-// to synchronize DOUT with Base Period Pulser
 always @ (posedge wb_clk_i)
-  if (bp_pulser) begin
-    dout_we_o   <= dout_we;
-    dout_o      <= dout_tmp;
-    // dout_set_o <= dout_set;
-    // dout_rst_o <= dout_rst;
-  end
-  
+  if (wb_rst_i)
+    dout_we       <= 0;
+  else
+    dout_we       <= dout_wr_sel;
+
 always @ (posedge wb_clk_i)
-  if (wb_rst_i | bp_pulser) begin
-    dout_we       <= 0; // reset dout_we to 0 at each base-period
-    dout_tmp      <= 0;
-    // dout_set  <= 0;
-    // dout_rst  <= 0;
-  end else if (dout_wr_sel) begin
-    dout_we       <= 1;
-    dout_tmp      <= wb_dat_i[DOUT_W-1:0];
-    // dout_set  <= dout_set | next_dout_set;
-    // dout_rst  <= dout_rst | next_dout_rst;
+  if (wb_rst_i)
+    dout_we_o     <= 0;
+  else
+    dout_we_o     <= dout_wr_sel | dout_we;
+
+always @ (posedge wb_clk_i)
+  if (dout_wr_sel) begin
+    dout_o        <= wb_dat_i[DOUT_W-1:0];
   end
 
 //obsolete: always @ (*) 
