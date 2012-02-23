@@ -7,8 +7,8 @@ module subsoc_top
   parameter           WB_SSIF_AW      = 0,
   parameter           WB_DW           = 0,
   parameter           WOU_DW          = 0,
-  // parameter           DIN_W           = 16,
-  parameter           DOUT_W          = 8,
+  //obsolete: parameter           DIN_W           = 16,
+  //obsolete: parameter           DOUT_W          = 8,
   parameter           ADC_W           = 0
 )
 (
@@ -33,14 +33,12 @@ module subsoc_top
   input                     sfifo_bp_tick_i,
   // GPIO Interface (clk_250)
   // SYNC_DOUT
-  output  [DOUT_W-1:0]      dout_o,
-  output                    dout_we_o,
-  input   [DOUT_W-1:0]      dout_i,
-//obsolete:  output  [DOUT_W-1:0]      dout_set_o,
-//obsolete:  output  [DOUT_W-1:0]      dout_rst_o,
+  output  [WB_DW-1:0]       dout_o,
+  //obsolete: output                    dout_we_o,
+  //obsolete: input   [DOUT_W-1:0]      dout_i,
   // SYNC_DIN
-  input   [31:0]            din_0_i,
-  input   [31:0]            din_1_i,
+  input   [WB_DW-1:0]       din_0_i,
+  input   [WB_DW-1:0]       din_1_i,
 
   // Aanlog to Digital Converter Inputs
   input   [ADC_W-1:0]       adc_0_i,
@@ -565,7 +563,7 @@ sfifo_if_top #(
   .WB_DW              ( 32        ),
   .WOU_DW             ( WOU_DW    ),  // WOU data bus width
   .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
-  .DOUT_W             ( DOUT_W    ),
+  // .DOUT_W             ( DOUT_W    ),
   // .DIN_W              ( DIN_W     ),
   .ADC_W              ( ADC_W     )   // width for ADC value
 ) sfifo_if_top (
@@ -602,8 +600,8 @@ sfifo_if_top #(
   // GPIO Interface (clk_250)
   // SYNC_DOUT
   .dout_o             ( dout_o ),
-  .dout_we_o          ( dout_we_o ),
-  .dout_i             ( dout_i ),
+  //obsolete: .dout_we_o          ( dout_we_o ),
+  //obsolete: .dout_i             ( dout_i ),
   // SYNC_DIN
   .din_0_i            ( din_0_i ),
   .din_1_i            ( din_1_i ),

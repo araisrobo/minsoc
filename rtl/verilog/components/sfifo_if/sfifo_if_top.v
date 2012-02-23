@@ -46,8 +46,9 @@ module sfifo_if_top
   parameter           WB_DW           = 32,
   parameter           WOU_DW          = 0,
   parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
+  // fixed 64-IN, 32-OUT
   // parameter           DIN_W           = 0,
-  parameter           DOUT_W          = 0,
+  // parameter           DOUT_W          = 0,
   parameter           ADC_W           = 0     // width for ADC value
 )
 (
@@ -80,12 +81,13 @@ module sfifo_if_top
 
   // GPIO Interface (clk_250)
   // SYNC_DOUT
-  output  reg [DOUT_W-1:0]            dout_o,   // may support up to 32-bits of DOUT
-  output  reg                         dout_we_o,
-  input       [DOUT_W-1:0]            dout_i,
+  output  reg [WB_DW-1:0]             dout_o,   // may support up to 32-bits of DOUT
+  // obsolete:  output  reg                         dout_we_o,
+  // obsolete:  input       [WB_DW-1:0]             dout_i,
+
   // SYNC_DIN
-  input       [31:0]                  din_0_i,  // may support up to 64-bits of DIN
-  input       [31:0]                  din_1_i,  
+  input       [WB_DW-1:0]             din_0_i,  // may support up to 64-bits of DIN
+  input       [WB_DW-1:0]             din_1_i,  
   
   // ADC_SPI value (clk_250)
   input       [ADC_W-1:0]             adc_0_i,
@@ -112,13 +114,9 @@ reg               bp_tick_n;
 reg [WB_DW-1:0]   bp_tick_cnt;
 wire              sfifo_di_sel;
 
-//not necessary: // to synchronize data from clk_250 to clk_500
-//not necessary: reg [31:0]        din_s;
-//not necessary: reg [ADC_W-1:0]   adc_s;
-
 // signals for SYNC_DOUT
 wire              dout_wr_sel;
-reg               dout_we;
+//obsolete: reg               dout_we;
 
 // signals for ADC input
 reg [ADC_W-1:0]   adc_lo;
@@ -218,7 +216,7 @@ begin
       `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
       `SFIFO_CTRL:      wb_dat_o  <= {28'd0, mbox_afull_i, mbox_full_i, sfifo_full_i, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
-      `SFIFO_DOUT:      wb_dat_o  <= {{(32-DOUT_W){1'b0}}, dout_i};
+      `SFIFO_DOUT:      wb_dat_o  <= {dout_o};
       `SFIFO_DIN_0:     wb_dat_o  <= {din_0_i};
       `SFIFO_DIN_1:     wb_dat_o  <= {din_1_i};
       `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_lo, {(16-ADC_W){1'b0}}, adc_hi};
@@ -253,57 +251,37 @@ always @ (posedge wb_clk_i)
   else if (bp_pulser)
     bp_tick_cnt <= bp_tick_cnt + 1;
 
-always @ (posedge wb_clk_i)
-  if (wb_rst_i)
-    dout_we       <= 0;
-  else
-    dout_we       <= dout_wr_sel;
+//obsolete: always @ (posedge wb_clk_i)
+//obsolete:   if (wb_rst_i)
+//obsolete:     dout_we       <= 0;
+//obsolete:   else
+//obsolete:     dout_we       <= dout_wr_sel;
+
+//obsolete: always @ (posedge wb_clk_i)
+//obsolete:   if (wb_rst_i)
+//obsolete:     dout_we_o     <= 0;
+//obsolete:   else
+//obsolete:     dout_we_o     <= dout_wr_sel | dout_we;
 
 always @ (posedge wb_clk_i)
-  if (wb_rst_i)
-    dout_we_o     <= 0;
-  else
-    dout_we_o     <= dout_wr_sel | dout_we;
-
-always @ (posedge wb_clk_i)
-  if (dout_wr_sel) begin
-    dout_o        <= wb_dat_i[DOUT_W-1:0];
+  if (dout_wr_sel & wb_sel_i[0]) begin
+    dout_o[7:0]     <= wb_dat_i[7:0];
   end
 
-//obsolete: always @ (*) 
-//obsolete: begin
-//obsolete:     casez (wb_dat_i[31:24]) // synopsys parallel_case
-//obsolete:       8'b1?000000: begin next_dout_set <= {7'h0,  wb_dat_i[30]      };  // dout[0]
-//obsolete:                          next_dout_rst <= {7'h0, ~wb_dat_i[30]      }; end 
-//obsolete:       8'b1?000001: begin next_dout_set <= {6'h0,  wb_dat_i[30], 1'h0}; // dout[1]
-//obsolete:                          next_dout_rst <= {6'h0, ~wb_dat_i[30], 1'h0}; end 
-//obsolete:       8'b1?000010: begin next_dout_set <= {5'h0,  wb_dat_i[30], 2'h0}; // dout[2]
-//obsolete:                          next_dout_rst <= {5'h0, ~wb_dat_i[30], 2'h0}; end      
-//obsolete:       8'b1?000011: begin next_dout_set <= {4'h0,  wb_dat_i[30], 3'h0}; // dout[3]
-//obsolete:                          next_dout_rst <= {4'h0, ~wb_dat_i[30], 3'h0}; end      
-//obsolete:       8'b1?000100: begin next_dout_set <= {3'h0,  wb_dat_i[30], 4'h0}; // dout[4]
-//obsolete:                          next_dout_rst <= {3'h0, ~wb_dat_i[30], 4'h0}; end      
-//obsolete:       8'b1?000101: begin next_dout_set <= {2'h0,  wb_dat_i[30], 5'h0}; // dout[5]
-//obsolete:                          next_dout_rst <= {2'h0, ~wb_dat_i[30], 5'h0}; end      
-//obsolete:       8'b1?000110: begin next_dout_set <= {1'h0,  wb_dat_i[30], 6'h0}; // dout[6]
-//obsolete:                          next_dout_rst <= {1'h0, ~wb_dat_i[30], 6'h0}; end      
-//obsolete:       8'b1?000111: begin next_dout_set <= {       wb_dat_i[30], 7'h0}; // dout[7]
-//obsolete:                          next_dout_rst <= {      ~wb_dat_i[30], 7'h0}; end 
-//obsolete:       default:     begin next_dout_set <= 8'h00;                       // Disable dout
-//obsolete:                          next_dout_rst <= 8'h00;                       end
-//obsolete:     endcase
-//obsolete: end    
+always @ (posedge wb_clk_i)
+  if (dout_wr_sel & wb_sel_i[1]) begin
+    dout_o[15:8]     <= wb_dat_i[15:8];
+  end
 
-//not necessary: // to synchronize from clk_250 to clk_500
-//not necessary: always @(posedge wb_clk_i)
-//not necessary:   if (wb_rst_i) begin
-//not necessary:     adc_s     <= 0;
-//not necessary:     din_s     <= 0;
-//not necessary:   end else begin
-//not necessary:     adc_s     <= adc_i;
-//not necessary:     din_s     <= din_i;
-//not necessary:   end
+always @ (posedge wb_clk_i)
+  if (dout_wr_sel & wb_sel_i[2]) begin
+    dout_o[23:16]     <= wb_dat_i[23:16];
+  end
 
+always @ (posedge wb_clk_i)
+  if (dout_wr_sel & wb_sel_i[3]) begin
+    dout_o[31:24]     <= wb_dat_i[31:24];
+  end
 
 // begin: write to MAILBOX
   
