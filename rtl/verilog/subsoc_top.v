@@ -31,6 +31,11 @@ module subsoc_top
   input                     sfifo_empty_i,
   input   [SFIFO_DW-1:0]    sfifo_di,
   input                     sfifo_bp_tick_i,
+
+  // RT_CMD Interface (clk_250)
+  output                    rt_cmd_rst_o,
+  input   [WB_DW-1:0]       rt_cmd_i,
+
   // GPIO Interface (clk_250)
   // SYNC_DOUT
   output  [WB_DW-1:0]       dout_o,
@@ -559,7 +564,7 @@ onchip_ram_top (
 // Instantiation of the SFIFO_IF
 //
 sfifo_if_top #(
-  .WB_AW              ( 6         ),  // lower address bits
+  .WB_AW              ( 7         ),  // lower address bits
   .WB_DW              ( 32        ),
   .WOU_DW             ( WOU_DW    ),  // WOU data bus width
   .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
@@ -573,7 +578,7 @@ sfifo_if_top #(
   .wb_rst_i	      ( wb_rst ),
 
   // WISHBONE slave
-  .wb_adr_i	      ( wb_sfifos_adr_i[5:2] ),
+  .wb_adr_i	      ( wb_sfifos_adr_i[6:2] ),
   .wb_dat_i	      ( wb_sfifos_dat_i      ),
   .wb_dat_o	      ( wb_sfifos_dat_o      ),
   .wb_we_i	      ( wb_sfifos_we_i       ),
@@ -596,6 +601,10 @@ sfifo_if_top #(
 
   // SFIFO_CTRL Interface (clk_250)
   .sfifo_bp_tick_i    ( sfifo_bp_tick_i     ),
+  
+  // RT_CMD Interface (clk_250)
+  .rt_cmd_rst_o       ( rt_cmd_rst_o        ),
+  .rt_cmd_i           ( rt_cmd_i            ),
   
   // GPIO Interface (clk_250)
   // SYNC_DOUT

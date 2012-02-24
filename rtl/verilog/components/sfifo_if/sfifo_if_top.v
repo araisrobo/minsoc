@@ -3,34 +3,14 @@
 //
 // Register Mapping wb_adr[5:2] (right offset by 2)
 //
-`define SFIFO_BP_TICK       4'h0
-`define SFIFO_CTRL          4'h1
-`define SFIFO_DI            4'h2
-`define MAILBOX_OBUF        4'h3    // 0x0C ~ 0x0F, output data buffer to MAILBOX
-`define SFIFO_DIN_0         4'b0100 // 0x10 ~ 0x13
-`define SFIFO_DIN_1         4'b0101 // 0x14 ~ 0x17
-`define SFIFO_DOUT          4'b0110 // 0x18 ~ 0x1B
-`define SFIFO_ADC_BASE      4'b1??? // 0x20 ~ 0x3F, ADC Ch0 ~ Ch15
-// For SFIFO_ADC_?: 
-// ignore MSB of WB_ADR[] since it must be '1'
-// add detection for wb_sel_i[1] for REG16() accessing
-// `define SFIFO_ADC_0         4'h0    
-// `define SFIFO_ADC_1         4'h1 
-// `define SFIFO_ADC_2         4'h2 
-// `define SFIFO_ADC_3         4'h3 
-// `define SFIFO_ADC_4         4'h4 
-// `define SFIFO_ADC_5         4'h5 
-// `define SFIFO_ADC_6         4'h6 
-// `define SFIFO_ADC_7         4'h7 
-// `define SFIFO_ADC_8         4'h8 
-// `define SFIFO_ADC_9         4'h9 
-// `define SFIFO_ADC_10        4'ha
-// `define SFIFO_ADC_11        4'hb
-// `define SFIFO_ADC_12        4'hc
-// `define SFIFO_ADC_13        4'hd
-// `define SFIFO_ADC_14        4'he
-// `define SFIFO_ADC_15        4'hf
-
+`define SFIFO_BP_TICK       5'h0
+`define SFIFO_CTRL          5'h1
+`define SFIFO_DI            5'h2
+`define MAILBOX_OBUF        5'h3    // 0x0C ~ 0x0F, output data buffer to MAILBOX
+`define SFIFO_DIN_0         5'h4    // 0x10 ~ 0x13
+`define SFIFO_DIN_1         5'h5    // 0x14 ~ 0x17
+`define SFIFO_DOUT          5'h6    // 0x18 ~ 0x1B
+`define SFIFO_ADC_BASE      5'b01??? // 0x20 ~ 0x3F, ADC Ch0 ~ Ch15
 `define SFIFO_ADC_01        3'h0    
 `define SFIFO_ADC_23        3'h1 
 `define SFIFO_ADC_45        3'h2 
@@ -39,80 +19,87 @@
 `define SFIFO_ADC_AB        3'h5 
 `define SFIFO_ADC_CD        3'h6 
 `define SFIFO_ADC_EF        3'h7 
+`define SFIFO_RT_CMD        5'h10   // 0x40 ~ 0x43
 
 module sfifo_if_top
 #(
-  parameter           WB_AW           = 0,    // lower address bits
-  parameter           WB_DW           = 32,
-  parameter           WOU_DW          = 0,
-  parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
+  parameter           WB_AW         = 0,    // lower address bits
+  parameter           WB_DW         = 32,
+  parameter           WOU_DW        = 0,
+  parameter           SFIFO_DW      = 16,   // data width for SYNC_FIFO
   // fixed 64-IN, 32-OUT
-  // parameter           DIN_W           = 0,
-  // parameter           DOUT_W          = 0,
-  parameter           ADC_W           = 0     // width for ADC value
+  // parameter           DIN_W         = 0,
+  // parameter           DOUT_W        = 0,
+  parameter           ADC_W         = 0     // width for ADC value
 )
 (
   // WISHBONE Interface
-  output  reg [WB_DW-1:0]             wb_dat_o,
-  output  reg                         wb_ack_o,
-  input                               wb_clk_i,
-  input                               wb_rst_i,
-  input                               wb_cyc_i,
-  input   [3:0]			      wb_sel_i,
-  input   [WB_AW-1:2]                 wb_adr_i,   // lower address bits
-  input   [WB_DW-1:0]                 wb_dat_i,   // data from wb_master
-  input                               wb_we_i,
-  input                               wb_stb_i,
+  output  reg [WB_DW-1:0]           wb_dat_o,
+  output  reg                       wb_ack_o,
+  input                             wb_clk_i,
+  input                             wb_rst_i,
+  input                             wb_cyc_i,
+  input   [3:0]			    wb_sel_i,
+  input   [WB_AW-1:2]               wb_adr_i,   // lower address bits
+  input   [WB_DW-1:0]               wb_dat_i,   // data from wb_master
+  input                             wb_we_i,
+  input                             wb_stb_i,
 
   // SFIFO Interface (clk_500)
-  output  reg                         sfifo_rd_o,
-  input                               sfifo_full_i,
-  input                               sfifo_empty_i,
-  input   [SFIFO_DW-1:0]              sfifo_di,
+  output  reg                       sfifo_rd_o,
+  input                             sfifo_full_i,
+  input                             sfifo_empty_i,
+  input   [SFIFO_DW-1:0]            sfifo_di,
 
   // MAILBOX Interface (clk_500)
-  output                              mbox_wr_o,
-  output  [WOU_DW-1:0]                mbox_do_o,
-  input                               mbox_full_i,
-  input                               mbox_afull_i,
+  output                            mbox_wr_o,
+  output  [WOU_DW-1:0]              mbox_do_o,
+  input                             mbox_full_i,
+  input                             mbox_afull_i,
 
   // SFIFO_CTRL Interface (clk_250)
-  input                               sfifo_bp_tick_i,
+  input                             sfifo_bp_tick_i,
+
+  // RT_CMD Interface (clk_250)
+  output                            rt_cmd_rst_o,
+  input   [WB_DW-1:0]               rt_cmd_i,
 
   // GPIO Interface (clk_250)
   // SYNC_DOUT
-  output  reg [WB_DW-1:0]             dout_o,   // may support up to 32-bits of DOUT
-  // obsolete:  output  reg                         dout_we_o,
-  // obsolete:  input       [WB_DW-1:0]             dout_i,
+  output  reg [WB_DW-1:0]           dout_o,   // may support up to 32-bits of DOUT
 
   // SYNC_DIN
-  input       [WB_DW-1:0]             din_0_i,  // may support up to 64-bits of DIN
-  input       [WB_DW-1:0]             din_1_i,  
+  input       [WB_DW-1:0]           din_0_i,  // may support up to 64-bits of DIN
+  input       [WB_DW-1:0]           din_1_i,  
   
   // ADC_SPI value (clk_250)
-  input       [ADC_W-1:0]             adc_0_i,
-  input       [ADC_W-1:0]             adc_1_i,
-  input       [ADC_W-1:0]             adc_2_i,
-  input       [ADC_W-1:0]             adc_3_i,
-  input       [ADC_W-1:0]             adc_4_i,
-  input       [ADC_W-1:0]             adc_5_i,
-  input       [ADC_W-1:0]             adc_6_i,
-  input       [ADC_W-1:0]             adc_7_i,
-  input       [ADC_W-1:0]             adc_8_i,
-  input       [ADC_W-1:0]             adc_9_i,
-  input       [ADC_W-1:0]             adc_10_i,
-  input       [ADC_W-1:0]             adc_11_i,
-  input       [ADC_W-1:0]             adc_12_i,
-  input       [ADC_W-1:0]             adc_13_i,
-  input       [ADC_W-1:0]             adc_14_i,
-  input       [ADC_W-1:0]             adc_15_i
+  input       [ADC_W-1:0]           adc_0_i,
+  input       [ADC_W-1:0]           adc_1_i,
+  input       [ADC_W-1:0]           adc_2_i,
+  input       [ADC_W-1:0]           adc_3_i,
+  input       [ADC_W-1:0]           adc_4_i,
+  input       [ADC_W-1:0]           adc_5_i,
+  input       [ADC_W-1:0]           adc_6_i,
+  input       [ADC_W-1:0]           adc_7_i,
+  input       [ADC_W-1:0]           adc_8_i,
+  input       [ADC_W-1:0]           adc_9_i,
+  input       [ADC_W-1:0]           adc_10_i,
+  input       [ADC_W-1:0]           adc_11_i,
+  input       [ADC_W-1:0]           adc_12_i,
+  input       [ADC_W-1:0]           adc_13_i,
+  input       [ADC_W-1:0]           adc_14_i,
+  input       [ADC_W-1:0]           adc_15_i
 );
 
-reg               sfifo_bp_tick_s;
-wire              bp_pulser;
-reg               bp_tick_n;
-reg [WB_DW-1:0]   bp_tick_cnt;
-wire              sfifo_di_sel;
+wire                rt_cmd_sel;
+reg                 rt_cmd_sel_s;
+reg [WB_DW-1:0]     rt_cmd_s;
+
+reg                 sfifo_bp_tick_s;
+wire                bp_pulser;
+reg                 bp_tick_n;
+reg [WB_DW-1:0]     bp_tick_cnt;
+wire                sfifo_di_sel;
 
 // signals for SYNC_DOUT
 wire              dout_wr_sel;
@@ -138,6 +125,7 @@ assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
 // wb_sel_i[3]: byte 0
 assign dout_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT);
 assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
+assign rt_cmd_sel   = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_RT_CMD);
 
 //**********************************************************************************
 // Code for simulation purposes only 
@@ -168,28 +156,6 @@ begin
 end
 
 // mux for ADC inputs
-//orig: always @(*)
-//orig: begin
-//orig:   casez ({wb_adr_i[WB_AW-2:2], wb_sel_i[1]})  // synopsys parallel_case
-//orig:     `SFIFO_ADC_0:     adc <= adc_0_i;
-//orig:     `SFIFO_ADC_1:     adc <= adc_1_i;
-//orig:     `SFIFO_ADC_2:     adc <= adc_2_i;
-//orig:     `SFIFO_ADC_3:     adc <= adc_3_i;
-//orig:     `SFIFO_ADC_4:     adc <= adc_4_i;
-//orig:     `SFIFO_ADC_5:     adc <= adc_5_i;
-//orig:     `SFIFO_ADC_6:     adc <= adc_6_i;
-//orig:     `SFIFO_ADC_7:     adc <= adc_7_i;
-//orig:     `SFIFO_ADC_8:     adc <= adc_8_i;
-//orig:     `SFIFO_ADC_9:     adc <= adc_9_i;
-//orig:     `SFIFO_ADC_10:    adc <= adc_10_i;
-//orig:     `SFIFO_ADC_11:    adc <= adc_11_i;
-//orig:     `SFIFO_ADC_12:    adc <= adc_12_i;
-//orig:     `SFIFO_ADC_13:    adc <= adc_13_i;
-//orig:     `SFIFO_ADC_14:    adc <= adc_14_i;
-//orig:     `SFIFO_ADC_15:    adc <= adc_15_i;
-//orig:     default:          adc <= 'bx;
-//orig:   endcase
-//orig: end
 always @(*)
 begin
   casez ({wb_adr_i[WB_AW-2:2]})  // synopsys parallel_case
@@ -220,6 +186,7 @@ begin
       `SFIFO_DIN_0:     wb_dat_o  <= {din_0_i};
       `SFIFO_DIN_1:     wb_dat_o  <= {din_1_i};
       `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_lo, {(16-ADC_W){1'b0}}, adc_hi};
+      `SFIFO_RT_CMD:    wb_dat_o  <= rt_cmd_s;
       default:          wb_dat_o  <= 'bx;
     endcase
 end
@@ -229,6 +196,21 @@ always @(posedge wb_clk_i)
     sfifo_rd_o <= 0;
   else
     sfifo_rd_o <= sfifo_di_sel & (~sfifo_empty_i) & ~wb_ack_o; // (~wb_ack_o): prevent from reading sfifo twice
+
+// sync from clk_250 to clk_500
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        rt_cmd_s        <= 0;
+    else 
+        rt_cmd_s        <= rt_cmd_i;
+
+// generate rt_cmd reset signal from clk_500 to clk_250
+assign rt_cmd_rst_o = rt_cmd_sel | rt_cmd_sel_s;
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        rt_cmd_sel_s    <= 0;
+    else 
+        rt_cmd_sel_s    <= rt_cmd_sel;
 
 // sync from clk_250 to clk_500
 always @ (posedge wb_clk_i)
