@@ -9,7 +9,7 @@
 `define MAILBOX_OBUF        5'h3    // 0x0C ~ 0x0F, output data buffer to MAILBOX
 `define SFIFO_DIN_0         5'h4    // 0x10 ~ 0x13
 `define SFIFO_DIN_1         5'h5    // 0x14 ~ 0x17
-`define SFIFO_DOUT          5'h6    // 0x18 ~ 0x1B
+`define SFIFO_DOUT_0        5'h6    // 0x18 ~ 0x1B
 `define SFIFO_ADC_BASE      5'b01??? // 0x20 ~ 0x3F, ADC Ch0 ~ Ch15
 `define SFIFO_ADC_01        3'h0    
 `define SFIFO_ADC_23        3'h1 
@@ -20,6 +20,7 @@
 `define SFIFO_ADC_CD        3'h6 
 `define SFIFO_ADC_EF        3'h7 
 `define SFIFO_RT_CMD        5'h10   // 0x40 ~ 0x43
+`define SFIFO_ESTOP_OUT_0   5'h12   // 0x48 ~ 0x4B
 
 module sfifo_if_top
 #(
@@ -66,7 +67,7 @@ module sfifo_if_top
 
   // GPIO Interface (clk_250)
   // SYNC_DOUT
-  output  reg [WB_DW-1:0]           dout_o,   // may support up to 32-bits of DOUT
+  output  reg [WB_DW-1:0]           dout_0_o,   // may support up to 32-bits of DOUT
 
   // SYNC_DIN
   input       [WB_DW-1:0]           din_0_i,  // may support up to 64-bits of DIN
@@ -102,8 +103,10 @@ reg [WB_DW-1:0]     bp_tick_cnt;
 wire                sfifo_di_sel;
 
 // signals for SYNC_DOUT
-wire              dout_wr_sel;
-//obsolete: reg               dout_we;
+wire                dout_0_wr_sel;
+wire                estop;
+reg [WB_DW-1:0]     estop_out_0; // output value for ESTOP
+wire                estop_out_0_wr_sel;
 
 // signals for ADC input
 reg [ADC_W-1:0]   adc_lo;
@@ -120,10 +123,18 @@ reg               mbox_ns;
 parameter         MBOX_IDLE   = 1'b0,
                   MBOX_WR     = 1'b1;
 
+initial begin
+    // initialized value right after FPGA configuration
+    estop_out_0 = 0;
+    dout_0_o = 0;
+    //obsolete: r_out = 8'h00;
+end
+
 // Address decoder
 assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
 // wb_sel_i[3]: byte 0
-assign dout_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT);
+assign estop_out_0_wr_sel = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ESTOP_OUT_0);
+assign dout_0_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT_0);
 assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
 assign rt_cmd_sel   = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_RT_CMD);
 
@@ -182,7 +193,7 @@ begin
       `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
       `SFIFO_CTRL:      wb_dat_o  <= {28'd0, mbox_afull_i, mbox_full_i, sfifo_full_i, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
-      `SFIFO_DOUT:      wb_dat_o  <= {dout_o};
+      `SFIFO_DOUT_0:    wb_dat_o  <= {dout_0_o};
       `SFIFO_DIN_0:     wb_dat_o  <= {din_0_i};
       `SFIFO_DIN_1:     wb_dat_o  <= {din_1_i};
       `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_lo, {(16-ADC_W){1'b0}}, adc_hi};
@@ -233,37 +244,41 @@ always @ (posedge wb_clk_i)
   else if (bp_pulser)
     bp_tick_cnt <= bp_tick_cnt + 1;
 
-//obsolete: always @ (posedge wb_clk_i)
-//obsolete:   if (wb_rst_i)
-//obsolete:     dout_we       <= 0;
-//obsolete:   else
-//obsolete:     dout_we       <= dout_wr_sel;
-
-//obsolete: always @ (posedge wb_clk_i)
-//obsolete:   if (wb_rst_i)
-//obsolete:     dout_we_o     <= 0;
-//obsolete:   else
-//obsolete:     dout_we_o     <= dout_wr_sel | dout_we;
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dout_0_o[7:0]       <= 0;
+    else if (estop)
+        dout_0_o[7:0]       <= estop_out_0[7:0];
+    else if (dout_0_wr_sel & wb_sel_i[0]) begin
+        dout_0_o[7:0]       <= wb_dat_i[7:0];
+    end
 
 always @ (posedge wb_clk_i)
-  if (dout_wr_sel & wb_sel_i[0]) begin
-    dout_o[7:0]     <= wb_dat_i[7:0];
-  end
+    if (wb_rst_i)
+        dout_0_o[15:8]      <= 0;
+    else if (estop)
+        dout_0_o[15:8]      <= estop_out_0[15:8];
+    else if (dout_0_wr_sel & wb_sel_i[1]) begin
+        dout_0_o[15:8]      <= wb_dat_i[15:8];
+    end
 
 always @ (posedge wb_clk_i)
-  if (dout_wr_sel & wb_sel_i[1]) begin
-    dout_o[15:8]     <= wb_dat_i[15:8];
-  end
+    if (wb_rst_i)
+        dout_0_o[23:16]     <= 0;
+    else if (estop)
+        dout_0_o[23:16]     <= estop_out_0[23:16];
+    else if (dout_0_wr_sel & wb_sel_i[2]) begin
+        dout_0_o[23:16]     <= wb_dat_i[23:16];
+    end
 
 always @ (posedge wb_clk_i)
-  if (dout_wr_sel & wb_sel_i[2]) begin
-    dout_o[23:16]     <= wb_dat_i[23:16];
-  end
-
-always @ (posedge wb_clk_i)
-  if (dout_wr_sel & wb_sel_i[3]) begin
-    dout_o[31:24]     <= wb_dat_i[31:24];
-  end
+    if (wb_rst_i)
+        dout_0_o[31:24]     <= 0;
+    else if (estop)
+        dout_0_o[31:24]     <= estop_out_0[31:24];
+    else if (dout_0_wr_sel & wb_sel_i[3]) begin
+        dout_0_o[31:24]     <= wb_dat_i[31:24];
+    end
 
 // begin: write to MAILBOX
   
@@ -321,5 +336,38 @@ begin
 end
 
 // end: write to MAILBOX
+
+// connect ESTOP to NC(B) pin of EMGS-switch
+// ESTOP is always gpio.in.00
+assign  estop = ~din_0_i[0];  // din[0] is 0 when ESTOP is pressed
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        estop_out_0[7:0]     <= 0;
+    else if (estop_out_0_wr_sel & wb_sel_i[0]) begin
+        estop_out_0[7:0]     <= wb_dat_i[7:0];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        estop_out_0[15:8]     <= 0;
+    else if (estop_out_0_wr_sel & wb_sel_i[1]) begin
+        estop_out_0[15:8]     <= wb_dat_i[15:8];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        estop_out_0[23:16]     <= 0;
+    else if (estop_out_0_wr_sel & wb_sel_i[2]) begin
+        estop_out_0[23:16]     <= wb_dat_i[23:16];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        estop_out_0[31:24]     <= 0;
+    else if (estop_out_0_wr_sel & wb_sel_i[3]) begin
+        estop_out_0[31:24]     <= wb_dat_i[31:24];
+    end
+
 
 endmodule
