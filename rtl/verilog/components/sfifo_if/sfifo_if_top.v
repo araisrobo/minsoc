@@ -68,6 +68,7 @@ module sfifo_if_top
   // GPIO Interface (clk_250)
   // SYNC_DOUT
   output  reg [WB_DW-1:0]           dout_0_o,   // may support up to 32-bits of DOUT
+  input                             alarm_i,
 
   // SYNC_DIN
   input       [WB_DW-1:0]           din_0_i,  // may support up to 64-bits of DIN
@@ -104,7 +105,6 @@ wire                sfifo_di_sel;
 
 // signals for SYNC_DOUT
 wire                dout_0_wr_sel;
-wire                estop;
 reg [WB_DW-1:0]     estop_out_0; // output value for ESTOP
 wire                estop_out_0_wr_sel;
 
@@ -247,7 +247,7 @@ always @ (posedge wb_clk_i)
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
         dout_0_o[7:0]       <= 0;
-    else if (estop)
+    else if (alarm_i)
         dout_0_o[7:0]       <= estop_out_0[7:0];
     else if (dout_0_wr_sel & wb_sel_i[0]) begin
         dout_0_o[7:0]       <= wb_dat_i[7:0];
@@ -256,7 +256,7 @@ always @ (posedge wb_clk_i)
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
         dout_0_o[15:8]      <= 0;
-    else if (estop)
+    else if (alarm_i)
         dout_0_o[15:8]      <= estop_out_0[15:8];
     else if (dout_0_wr_sel & wb_sel_i[1]) begin
         dout_0_o[15:8]      <= wb_dat_i[15:8];
@@ -265,7 +265,7 @@ always @ (posedge wb_clk_i)
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
         dout_0_o[23:16]     <= 0;
-    else if (estop)
+    else if (alarm_i)
         dout_0_o[23:16]     <= estop_out_0[23:16];
     else if (dout_0_wr_sel & wb_sel_i[2]) begin
         dout_0_o[23:16]     <= wb_dat_i[23:16];
@@ -274,7 +274,7 @@ always @ (posedge wb_clk_i)
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
         dout_0_o[31:24]     <= 0;
-    else if (estop)
+    else if (alarm_i)
         dout_0_o[31:24]     <= estop_out_0[31:24];
     else if (dout_0_wr_sel & wb_sel_i[3]) begin
         dout_0_o[31:24]     <= wb_dat_i[31:24];
@@ -336,10 +336,6 @@ begin
 end
 
 // end: write to MAILBOX
-
-// connect ESTOP to NC(B) pin of EMGS-switch
-// ESTOP is always gpio.in.00
-assign  estop = ~din_0_i[0];  // din[0] is 0 when ESTOP is pressed
 
 always @ (posedge wb_clk_i)
     if (wb_rst_i)

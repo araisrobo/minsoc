@@ -39,6 +39,7 @@ module subsoc_top
   // GPIO Interface (clk_250)
   // SYNC_DOUT
   output  [WB_DW-1:0]       dout_0_o,
+  input                     alarm_i,
   // SYNC_DIN
   input   [WB_DW-1:0]       din_0_i,
   input   [WB_DW-1:0]       din_1_i,
@@ -607,6 +608,7 @@ sfifo_if_top #(
   // GPIO Interface (clk_250)
   // SYNC_DOUT
   .dout_0_o           ( dout_0_o ),
+  .alarm_i            ( alarm_i ),
   // SYNC_DIN
   .din_0_i            ( din_0_i ),
   .din_1_i            ( din_1_i ),
