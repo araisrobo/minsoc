@@ -5,11 +5,12 @@
 //
 `define SFIFO_BP_TICK       5'h0
 `define SFIFO_CTRL          5'h1
-`define SFIFO_DI            5'h2
+`define SFIFO_DI            5'h2    // FIFO-DATA-INPUT
 `define MAILBOX_OBUF        5'h3    // 0x0C ~ 0x0F, output data buffer to MAILBOX
 `define SFIFO_DIN_0         5'h4    // 0x10 ~ 0x13
 `define SFIFO_DIN_1         5'h5    // 0x14 ~ 0x17
-`define SFIFO_DOUT_0        5'h6    // 0x18 ~ 0x1B
+`define SFIFO_DIN_2         5'h6    // 0x18 ~ 0x1B
+`define SFIFO_DOUT_0        5'h7    // 0x1C ~ 0x1F
 `define SFIFO_ADC_BASE      5'b01??? // 0x20 ~ 0x3F, ADC Ch0 ~ Ch15
 `define SFIFO_ADC_01        3'h0    
 `define SFIFO_ADC_23        3'h1 
@@ -74,6 +75,7 @@ module sfifo_if_top
   // SYNC_DIN
   input       [WB_DW-1:0]           din_0_i,  // may support up to 64-bits of DIN
   input       [WB_DW-1:0]           din_1_i,  
+  input       [     15:0]           din_2_i,  
   
   // ADC_SPI value (clk_250)
   input       [ADC_W-1:0]           adc_0_i,
@@ -194,9 +196,10 @@ begin
       `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
       `SFIFO_CTRL:      wb_dat_o  <= {27'd0, mbox_empty_i, mbox_afull_i, mbox_full_i, sfifo_full_i, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
-      `SFIFO_DOUT_0:    wb_dat_o  <= {dout_0_o};
       `SFIFO_DIN_0:     wb_dat_o  <= {din_0_i};
       `SFIFO_DIN_1:     wb_dat_o  <= {din_1_i};
+      `SFIFO_DIN_2:     wb_dat_o  <= {16'd0, din_2_i};
+      `SFIFO_DOUT_0:    wb_dat_o  <= {dout_0_o};
       `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_lo, {(16-ADC_W){1'b0}}, adc_hi};
       `SFIFO_RT_CMD:    wb_dat_o  <= rt_cmd_s;
       default:          wb_dat_o  <= 'bx;
