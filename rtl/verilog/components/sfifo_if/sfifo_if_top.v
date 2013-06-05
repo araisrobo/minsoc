@@ -57,6 +57,7 @@ module sfifo_if_top
   output  [WOU_DW-1:0]              mbox_do_o,
   input                             mbox_full_i,
   input                             mbox_afull_i,
+  input                             mbox_empty_i,
 
   // SFIFO_CTRL Interface (clk_250)
   input                             sfifo_bp_tick_i,
@@ -191,7 +192,7 @@ begin
   else
     casez (wb_adr_i[WB_AW-1:2])  // synopsys parallel_case
       `SFIFO_BP_TICK:   wb_dat_o  <= {bp_tick_cnt};
-      `SFIFO_CTRL:      wb_dat_o  <= {28'd0, mbox_afull_i, mbox_full_i, sfifo_full_i, sfifo_empty_i};
+      `SFIFO_CTRL:      wb_dat_o  <= {27'd0, mbox_empty_i, mbox_afull_i, mbox_full_i, sfifo_full_i, sfifo_empty_i};
       `SFIFO_DI:        wb_dat_o  <= {sfifo_di, 16'd0}; 
       `SFIFO_DOUT_0:    wb_dat_o  <= {dout_0_o};
       `SFIFO_DIN_0:     wb_dat_o  <= {din_0_i};
