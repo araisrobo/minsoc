@@ -66,14 +66,11 @@ module subsoc_top
   output                    mbox_wr_o,
   output  [WOU_DW-1:0]      mbox_do_o,
   input                     mbox_full_i,
-  input                     mbox_afull_i
-// `endif
+  input                     mbox_afull_i,
+  input                     mbox_empty_i,
 
 //
 // SSIF (Servo/Stepper InterFace)
-//
-// `ifdef SSIF
-  ,
   // WISHBONE Interface 1
   output                    wb_ssif_stb_o,
   output                    wb_ssif_cyc_o,
@@ -84,7 +81,6 @@ module subsoc_top
   input   [WB_DW-1:0]       wb_ssif_dat_i,
   input                     wb_ssif_ack_i,
   input                     wb_ssif_err_i
-// `endif
 
 );
 
@@ -597,6 +593,7 @@ sfifo_if_top #(
   .mbox_do_o          ( mbox_do_o ),
   .mbox_full_i        ( mbox_full_i ),
   .mbox_afull_i       ( mbox_afull_i ),
+  .mbox_empty_i       ( mbox_empty_i ),
 
   // SFIFO_CTRL Interface (clk_250)
   .sfifo_bp_tick_i    ( sfifo_bp_tick_i     ),
