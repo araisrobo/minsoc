@@ -23,6 +23,13 @@
 `define SFIFO_RT_CMD        5'h10   // 0x40 ~ 0x43
 `define SFIFO_ESTOP_OUT_0   5'h12   // 0x48 ~ 0x4B
 
+`define SFIFO_DAC_PREFIX    3'b101      // 0x50 ~ 0x5F, DAC Ch0 ~ Ch3
+`define SFIFO_DAC_BASE      5'b101??    // 0x50 ~ 0x5F, DAC Ch0 ~ Ch3
+`define SFIFO_DAC_0         2'h0        // for 0x50
+`define SFIFO_DAC_1         2'h1        // for 0x54
+`define SFIFO_DAC_2         2'h2        // for 0x58
+`define SFIFO_DAC_3         2'h3        // for 0x5C
+
 module sfifo_if_top
 #(
   parameter           WB_AW         = 0,    // lower address bits
@@ -32,7 +39,8 @@ module sfifo_if_top
   // fixed 64-IN, 32-OUT
   // parameter           DIN_W         = 0,
   // parameter           DOUT_W        = 0,
-  parameter           ADC_W         = 0     // width for ADC value
+  parameter           ADC_W         = 0,    // width for ADC value
+  parameter           DAC_W         = 0     // width for DAC command
 )
 (
   // WISHBONE Interface
@@ -93,7 +101,13 @@ module sfifo_if_top
   input       [ADC_W-1:0]           adc_12_i,
   input       [ADC_W-1:0]           adc_13_i,
   input       [ADC_W-1:0]           adc_14_i,
-  input       [ADC_W-1:0]           adc_15_i
+  input       [ADC_W-1:0]           adc_15_i,
+  
+  // DAC_SPI CMD (clk_250)
+  output  reg [DAC_W-1:0]           dac_0_o,
+  output  reg [DAC_W-1:0]           dac_1_o,
+  output  reg [DAC_W-1:0]           dac_2_o,
+  output  reg [DAC_W-1:0]           dac_3_o
 );
 
 wire                rt_cmd_sel;
@@ -114,6 +128,10 @@ wire                estop_out_0_wr_sel;
 // signals for ADC input
 reg [ADC_W-1:0]   adc_lo;
 reg [ADC_W-1:0]   adc_hi;
+
+// signals for DAC command
+reg [DAC_W-1:0]     dac;  // reading
+wire                dac_wr_sel;
 
 // signals for MAILBOX
 wire              mbox_wr_sel;
@@ -139,6 +157,8 @@ assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
 assign estop_out_0_wr_sel = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ESTOP_OUT_0);
 assign dout_0_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT_0);
 assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
+assign dac_wr_sel   = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:4] == `SFIFO_DAC_PREFIX);
+
 assign rt_cmd_sel   = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_RT_CMD);
 
 //**********************************************************************************
@@ -172,7 +192,7 @@ end
 // mux for ADC inputs
 always @(*)
 begin
-  casez ({wb_adr_i[WB_AW-2:2]})  // synopsys parallel_case
+  casez ({wb_adr_i[WB_AW-3:2]})  // synopsys parallel_case
     `SFIFO_ADC_01:  begin adc_lo <= adc_0_i;  adc_hi <= adc_1_i;  end
     `SFIFO_ADC_23:  begin adc_lo <= adc_2_i;  adc_hi <= adc_3_i;  end
     `SFIFO_ADC_45:  begin adc_lo <= adc_4_i;  adc_hi <= adc_5_i;  end
@@ -184,6 +204,19 @@ begin
     default:        begin adc_lo <= 'bx;      adc_hi <= 'bx; end
   endcase
 end
+
+// mux for DAC commands, WB_AW is 7
+always @(*)
+begin
+  casez ({wb_adr_i[WB_AW-4:2]})  // synopsys parallel_case
+    `SFIFO_DAC_0:  begin dac <= dac_0_o; end
+    `SFIFO_DAC_1:  begin dac <= dac_1_o; end
+    `SFIFO_DAC_2:  begin dac <= dac_2_o; end
+    `SFIFO_DAC_3:  begin dac <= dac_3_o; end
+    default:       begin dac <= 'bx;     end
+  endcase
+end
+
 
 // Read from registers
 // Wb data out
@@ -201,6 +234,7 @@ begin
       `SFIFO_DIN_2:     wb_dat_o  <= {16'd0, din_2_i};
       `SFIFO_DOUT_0:    wb_dat_o  <= {dout_0_o};
       `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_lo, {(16-ADC_W){1'b0}}, adc_hi};
+      `SFIFO_DAC_BASE:  wb_dat_o  <= {{(32-DAC_W){1'b0}}, dac};
       `SFIFO_RT_CMD:    wb_dat_o  <= rt_cmd_s;
       default:          wb_dat_o  <= 'bx;
     endcase
@@ -369,5 +403,32 @@ always @ (posedge wb_clk_i)
         estop_out_0[31:24]     <= wb_dat_i[31:24];
     end
 
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dac_0_o             <= 0;   // NOP
+    else if (dac_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_DAC_0)) begin
+        dac_0_o             <= wb_dat_i[DAC_W-1:0];
+    end
+  
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dac_1_o             <= 0;   // NOP
+    else if (dac_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_DAC_1)) begin
+        dac_1_o             <= wb_dat_i[DAC_W-1:0];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dac_2_o             <= 0;   // NOP
+    else if (dac_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_DAC_2)) begin
+        dac_2_o             <= wb_dat_i[DAC_W-1:0];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dac_3_o             <= 0;   // NOP
+    else if (dac_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_DAC_3)) begin
+        dac_3_o             <= wb_dat_i[DAC_W-1:0];
+    end
 
 endmodule

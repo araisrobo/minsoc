@@ -9,7 +9,8 @@ module subsoc_top
   parameter           WOU_DW          = 0,
   //obsolete: parameter           DIN_W           = 16,
   //obsolete: parameter           DOUT_W          = 8,
-  parameter           ADC_W           = 0
+  parameter           ADC_W           = 0,
+  parameter           DAC_W           = 0
 )
 (
   input               clk,
@@ -63,6 +64,12 @@ module subsoc_top
   input   [ADC_W-1:0]       adc_14_i,
   input   [ADC_W-1:0]       adc_15_i,
   
+  // Digital to Analog Converter Outputs
+  output  [DAC_W-1:0]       dac_0_o,
+  output  [DAC_W-1:0]       dac_1_o,
+  output  [DAC_W-1:0]       dac_2_o,
+  output  [DAC_W-1:0]       dac_3_o,
+
   // MAILBOX Interface (clk_500)
   output                    mbox_wr_o,
   output  [WOU_DW-1:0]      mbox_do_o,
@@ -566,7 +573,8 @@ sfifo_if_top #(
   .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
   // .DOUT_W             ( DOUT_W    ),
   // .DIN_W              ( DIN_W     ),
-  .ADC_W              ( ADC_W     )   // width for ADC value
+  .ADC_W              ( ADC_W     ),  // width for ADC value
+  .DAC_W              ( DAC_W     )   // width for DAC command
 ) sfifo_if_top (
 
   // WISHBONE common
@@ -628,7 +636,13 @@ sfifo_if_top #(
   .adc_12_i           ( adc_12_i ),
   .adc_13_i           ( adc_13_i ),
   .adc_14_i           ( adc_14_i ),
-  .adc_15_i           ( adc_15_i )
+  .adc_15_i           ( adc_15_i ),
+  
+  // DAC output
+  .dac_0_o            ( dac_0_o ),
+  .dac_1_o            ( dac_1_o ),
+  .dac_2_o            ( dac_2_o ),
+  .dac_3_o            ( dac_3_o )
 );
 
 //
