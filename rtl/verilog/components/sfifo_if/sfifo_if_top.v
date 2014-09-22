@@ -9,8 +9,7 @@
 `define MAILBOX_OBUF        5'h3    // 0x0C ~ 0x0F, output data buffer to MAILBOX
 `define SFIFO_DIN_0         5'h4    // 0x10 ~ 0x13
 `define SFIFO_DIN_1         5'h5    // 0x14 ~ 0x17
-`define SFIFO_DIN_2         5'h6    // 0x18 ~ 0x1B
-`define SFIFO_DOUT_0        5'h7    // 0x1C ~ 0x1F
+`define SFIFO_DIN_2         5'h6    // 0x18 ~ 0x1B 00110..
 `define SFIFO_ADC_BASE      5'b01??? // 0x20 ~ 0x3F, ADC Ch0 ~ Ch15
 `define SFIFO_ADC_01        3'h0    
 `define SFIFO_ADC_23        3'h1 
@@ -21,7 +20,8 @@
 `define SFIFO_ADC_CD        3'h6 
 `define SFIFO_ADC_EF        3'h7 
 `define SFIFO_RT_CMD        5'h10   // 0x40 ~ 0x43
-`define SFIFO_ESTOP_OUT_0   5'h12   // 0x48 ~ 0x4B
+`define SFIFO_ESTOP_OUT_0   5'h12   // 0x48 ~ 0x4B 100_10..
+`define SFIFO_ESTOP_OUT_1   5'h13   // 0x4C ~ 0x4F 100_11..
 
 `define SFIFO_DAC_PREFIX    3'b101      // 0x50 ~ 0x5F, DAC Ch0 ~ Ch3
 `define SFIFO_DAC_BASE      5'b101??    // 0x50 ~ 0x5F, DAC Ch0 ~ Ch3
@@ -29,6 +29,8 @@
 `define SFIFO_DAC_1         2'h1        // for 0x54
 `define SFIFO_DAC_2         2'h2        // for 0x58
 `define SFIFO_DAC_3         2'h3        // for 0x5C
+`define SFIFO_DOUT_0        5'h18   // 0x60 ~ 0x63 110_00..
+`define SFIFO_DOUT_1        5'h19   // 0x64 ~ 0x67 110_01..
 
 module sfifo_if_top
 #(
@@ -36,7 +38,7 @@ module sfifo_if_top
   parameter           WB_DW         = 32,
   parameter           WOU_DW        = 0,
   parameter           SFIFO_DW      = 16,   // data width for SYNC_FIFO
-  // fixed 64-IN, 32-OUT
+  // fixed 80-IN, 64-OUT
   // parameter           DIN_W         = 0,
   // parameter           DOUT_W        = 0,
   parameter           ADC_W         = 0,    // width for ADC value
@@ -77,11 +79,12 @@ module sfifo_if_top
 
   // GPIO Interface (clk_250)
   // SYNC_DOUT
-  output  reg [WB_DW-1:0]           dout_0_o,   // may support up to 32-bits of DOUT
+  output  reg [WB_DW-1:0]           dout_0_o,   // may support up to 64-bits of DOUT
+  output  reg [WB_DW-1:0]           dout_1_o,   // may support up to 64-bits of DOUT
   input                             alarm_i,
 
   // SYNC_DIN
-  input       [WB_DW-1:0]           din_0_i,  // may support up to 64-bits of DIN
+  input       [WB_DW-1:0]           din_0_i,    // may support up to 64-bits of DIN
   input       [WB_DW-1:0]           din_1_i,  
   input       [     15:0]           din_2_i,  
   
@@ -122,12 +125,15 @@ wire                sfifo_di_sel;
 
 // signals for SYNC_DOUT
 wire                dout_0_wr_sel;
+wire                dout_1_wr_sel;
 reg [WB_DW-1:0]     estop_out_0; // output value for ESTOP
 wire                estop_out_0_wr_sel;
+//TODO: reg [WB_DW-1:0]     estop_out_1; // output value for ESTOP
+//TODO: wire                estop_out_1_wr_sel;
 
 // signals for ADC input
-reg [ADC_W-1:0]   adc_lo;
-reg [ADC_W-1:0]   adc_hi;
+reg [ADC_W-1:0]     adc_lo;
+reg [ADC_W-1:0]     adc_hi;
 
 // signals for DAC command
 reg [DAC_W-1:0]     dac;  // reading
@@ -147,15 +153,18 @@ parameter         MBOX_IDLE   = 1'b0,
 initial begin
     // initialized value right after FPGA configuration
     estop_out_0 = 0;
+    //TODO: estop_out_1 = 0;
     dout_0_o = 0;
-    //obsolete: r_out = 8'h00;
+    dout_1_o = 0;
 end
 
 // Address decoder
 assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
 // wb_sel_i[3]: byte 0
 assign estop_out_0_wr_sel = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ESTOP_OUT_0);
+assign estop_out_1_wr_sel = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ESTOP_OUT_1);
 assign dout_0_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT_0);
+assign dout_1_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT_1);
 assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
 assign dac_wr_sel   = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:4] == `SFIFO_DAC_PREFIX);
 
@@ -233,6 +242,7 @@ begin
       `SFIFO_DIN_1:     wb_dat_o  <= {din_1_i};
       `SFIFO_DIN_2:     wb_dat_o  <= {16'd0, din_2_i};
       `SFIFO_DOUT_0:    wb_dat_o  <= {dout_0_o};
+      `SFIFO_DOUT_1:    wb_dat_o  <= {dout_1_o};
       `SFIFO_ADC_BASE:  wb_dat_o  <= {{(16-ADC_W){1'b0}}, adc_lo, {(16-ADC_W){1'b0}}, adc_hi};
       `SFIFO_DAC_BASE:  wb_dat_o  <= {{(32-DAC_W){1'b0}}, dac};
       `SFIFO_RT_CMD:    wb_dat_o  <= rt_cmd_s;
@@ -318,6 +328,43 @@ always @ (posedge wb_clk_i)
         dout_0_o[31:24]     <= wb_dat_i[31:24];
     end
 
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dout_1_o[7:0]       <= 0;
+//TODO:    else if (alarm_i)
+//TODO:        dout_1_o[7:0]       <= estop_out_1[7:0];
+    else if (dout_1_wr_sel & wb_sel_i[0]) begin
+        dout_1_o[7:0]       <= wb_dat_i[7:0];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dout_1_o[15:8]      <= 0;
+//TODO:    else if (alarm_i)
+//TODO:        dout_1_o[15:8]      <= estop_out_1[15:8];
+    else if (dout_1_wr_sel & wb_sel_i[1]) begin
+        dout_1_o[15:8]      <= wb_dat_i[15:8];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dout_1_o[23:16]     <= 0;
+//TODO:    else if (alarm_i)
+//TODO:        dout_1_o[23:16]     <= estop_out_1[23:16];
+    else if (dout_1_wr_sel & wb_sel_i[2]) begin
+        dout_1_o[23:16]     <= wb_dat_i[23:16];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        dout_1_o[31:24]     <= 0;
+//TODO:    else if (alarm_i)
+//TODO:        dout_1_o[31:24]     <= estop_out_1[31:24];
+    else if (dout_1_wr_sel & wb_sel_i[3]) begin
+        dout_1_o[31:24]     <= wb_dat_i[31:24];
+    end
+
+
 // begin: write to MAILBOX
   
 /**
@@ -402,6 +449,34 @@ always @ (posedge wb_clk_i)
     else if (estop_out_0_wr_sel & wb_sel_i[3]) begin
         estop_out_0[31:24]     <= wb_dat_i[31:24];
     end
+
+//TODO: always @ (posedge wb_clk_i)
+//TODO:     if (wb_rst_i)
+//TODO:         estop_out_1[7:0]     <= 0;
+//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[0]) begin
+//TODO:         estop_out_1[7:0]     <= wb_dat_i[7:0];
+//TODO:     end
+//TODO: 
+//TODO: always @ (posedge wb_clk_i)
+//TODO:     if (wb_rst_i)
+//TODO:         estop_out_1[15:8]     <= 0;
+//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[1]) begin
+//TODO:         estop_out_1[15:8]     <= wb_dat_i[15:8];
+//TODO:     end
+//TODO: 
+//TODO: always @ (posedge wb_clk_i)
+//TODO:     if (wb_rst_i)
+//TODO:         estop_out_1[23:16]     <= 0;
+//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[2]) begin
+//TODO:         estop_out_1[23:16]     <= wb_dat_i[23:16];
+//TODO:     end
+//TODO: 
+//TODO: always @ (posedge wb_clk_i)
+//TODO:     if (wb_rst_i)
+//TODO:         estop_out_1[31:24]     <= 0;
+//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[3]) begin
+//TODO:         estop_out_1[31:24]     <= wb_dat_i[31:24];
+//TODO:     end
 
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
