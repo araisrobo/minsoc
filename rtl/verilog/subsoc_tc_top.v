@@ -99,8 +99,8 @@ module subsoc_tc_top (
 	t0_wb_dat_i,
 	t0_wb_ack_i,
 	t0_wb_err_i,
-
-	t1_wb_cyc_o,
+	
+        t1_wb_cyc_o,
 	t1_wb_stb_o,
 	t1_wb_adr_o,
 	t1_wb_sel_o,
@@ -118,94 +118,24 @@ module subsoc_tc_top (
 	t2_wb_dat_o,
 	t2_wb_dat_i,
 	t2_wb_ack_i,
-	t2_wb_err_i,
-
-	t3_wb_cyc_o,
-	t3_wb_stb_o,
-	t3_wb_adr_o,
-	t3_wb_sel_o,
-	t3_wb_we_o,
-	t3_wb_dat_o,
-	t3_wb_dat_i,
-	t3_wb_ack_i,
-	t3_wb_err_i,
-
-	t4_wb_cyc_o,
-	t4_wb_stb_o,
-	t4_wb_adr_o,
-	t4_wb_sel_o,
-	t4_wb_we_o,
-	t4_wb_dat_o,
-	t4_wb_dat_i,
-	t4_wb_ack_i,
-	t4_wb_err_i,
-
-	t5_wb_cyc_o,
-	t5_wb_stb_o,
-	t5_wb_adr_o,
-	t5_wb_sel_o,
-	t5_wb_we_o,
-	t5_wb_dat_o,
-	t5_wb_dat_i,
-	t5_wb_ack_i,
-	t5_wb_err_i,
-
-	t6_wb_cyc_o,
-	t6_wb_stb_o,
-	t6_wb_adr_o,
-	t6_wb_sel_o,
-	t6_wb_we_o,
-	t6_wb_dat_o,
-	t6_wb_dat_i,
-	t6_wb_ack_i,
-	t6_wb_err_i,
-
-	t7_wb_cyc_o,
-	t7_wb_stb_o,
-	t7_wb_adr_o,
-	t7_wb_sel_o,
-	t7_wb_we_o,
-	t7_wb_dat_o,
-	t7_wb_dat_i,
-	t7_wb_ack_i,
-	t7_wb_err_i,
-
-	t8_wb_cyc_o,
-	t8_wb_stb_o,
-	t8_wb_adr_o,
-	t8_wb_sel_o,
-	t8_wb_we_o,
-	t8_wb_dat_o,
-	t8_wb_dat_i,
-	t8_wb_ack_i,
-	t8_wb_err_i
-
+	t2_wb_err_i
 );
 
 //
 // Parameters
 //
-parameter		t0_addr_w = 4;
-parameter		t0_addr = 4'd8;
-parameter		t1_addr_w = 4;
-parameter		t1_addr = 4'd0;
-parameter		t28c_addr_w = 4;
-parameter		t28_addr = 4'd0;
-parameter		t28i_addr_w = 4;
-parameter		t2_addr = 4'd1;
-parameter		t3_addr = 4'd2;
-parameter		t4_addr = 4'd3;
-parameter		t5_addr = 4'd4;
-parameter		t6_addr = 4'd5;
-parameter		t7_addr = 4'd6;
-parameter		t8_addr = 4'd7;
+parameter               addr_prefix_w = 0;
+parameter               addr_suffix_w = 0;
+parameter    	        t0_addr_prefix = 0;
+parameter    	        accel_addr_prefix = 0;
+parameter    	        t1_addr_suffix = 0;
+parameter    	        t2_addr_suffix = 0;
 
 //
 // I/O Ports
 //
 input			wb_clk_i;
 input			wb_rst_i;
-
 
 //
 // WB slave i/f connecting initiator 4
@@ -232,7 +162,6 @@ input	[`TC_DW-1:0]	i5_wb_dat_i;
 output	[`TC_DW-1:0]	i5_wb_dat_o;
 output			i5_wb_ack_o;
 output			i5_wb_err_o;
-
 
 //
 // WB master i/f connecting target 0
@@ -274,84 +203,6 @@ input			t2_wb_ack_i;
 input			t2_wb_err_i;
 
 //
-// WB master i/f connecting target 3
-//
-output			t3_wb_cyc_o;
-output			t3_wb_stb_o;
-output	[`TC_AW-1:0]	t3_wb_adr_o;
-output	[`TC_BSW-1:0]	t3_wb_sel_o;
-output			t3_wb_we_o;
-output	[`TC_DW-1:0]	t3_wb_dat_o;
-input	[`TC_DW-1:0]	t3_wb_dat_i;
-input			t3_wb_ack_i;
-input			t3_wb_err_i;
-
-//
-// WB master i/f connecting target 4
-//
-output			t4_wb_cyc_o;
-output			t4_wb_stb_o;
-output	[`TC_AW-1:0]	t4_wb_adr_o;
-output	[`TC_BSW-1:0]	t4_wb_sel_o;
-output			t4_wb_we_o;
-output	[`TC_DW-1:0]	t4_wb_dat_o;
-input	[`TC_DW-1:0]	t4_wb_dat_i;
-input			t4_wb_ack_i;
-input			t4_wb_err_i;
-
-//
-// WB master i/f connecting target 5
-//
-output			t5_wb_cyc_o;
-output			t5_wb_stb_o;
-output	[`TC_AW-1:0]	t5_wb_adr_o;
-output	[`TC_BSW-1:0]	t5_wb_sel_o;
-output			t5_wb_we_o;
-output	[`TC_DW-1:0]	t5_wb_dat_o;
-input	[`TC_DW-1:0]	t5_wb_dat_i;
-input			t5_wb_ack_i;
-input			t5_wb_err_i;
-
-//
-// WB master i/f connecting target 6
-//
-output			t6_wb_cyc_o;
-output			t6_wb_stb_o;
-output	[`TC_AW-1:0]	t6_wb_adr_o;
-output	[`TC_BSW-1:0]	t6_wb_sel_o;
-output			t6_wb_we_o;
-output	[`TC_DW-1:0]	t6_wb_dat_o;
-input	[`TC_DW-1:0]	t6_wb_dat_i;
-input			t6_wb_ack_i;
-input			t6_wb_err_i;
-
-//
-// WB master i/f connecting target 7
-//
-output			t7_wb_cyc_o;
-output			t7_wb_stb_o;
-output	[`TC_AW-1:0]	t7_wb_adr_o;
-output	[`TC_BSW-1:0]	t7_wb_sel_o;
-output			t7_wb_we_o;
-output	[`TC_DW-1:0]	t7_wb_dat_o;
-input	[`TC_DW-1:0]	t7_wb_dat_i;
-input			t7_wb_ack_i;
-input			t7_wb_err_i;
-
-//
-// WB master i/f connecting target 8
-//
-output			t8_wb_cyc_o;
-output			t8_wb_stb_o;
-output	[`TC_AW-1:0]	t8_wb_adr_o;
-output	[`TC_BSW-1:0]	t8_wb_sel_o;
-output			t8_wb_we_o;
-output	[`TC_DW-1:0]	t8_wb_dat_o;
-input	[`TC_DW-1:0]	t8_wb_dat_i;
-input			t8_wb_ack_i;
-input			t8_wb_err_i;
-
-//
 // Internal wires & registers
 //
 
@@ -361,29 +212,9 @@ input			t8_wb_err_i;
 wire	[`TC_DW-1:0]	xi4_wb_dat_o;
 wire			xi4_wb_ack_o;
 wire			xi4_wb_err_o;
-wire	[`TC_DW-1:0]	xi5_wb_dat_o;
-wire			xi5_wb_ack_o;
-wire			xi5_wb_err_o;
 wire	[`TC_DW-1:0]	yi4_wb_dat_o;
 wire			yi4_wb_ack_o;
 wire			yi4_wb_err_o;
-wire	[`TC_DW-1:0]	yi5_wb_dat_o;
-wire			yi5_wb_ack_o;
-wire			yi5_wb_err_o;
-
-//
-// Intermediate signals connecting peripheral channel's
-// mi_to_st and si_to_mt blocks.
-//
-wire			z_wb_cyc_i;
-wire			z_wb_stb_i;
-wire	[`TC_AW-1:0]	z_wb_adr_i;
-wire	[`TC_BSW-1:0]	z_wb_sel_i;
-wire			z_wb_we_i;
-wire	[`TC_DW-1:0]	z_wb_dat_i;
-wire	[`TC_DW-1:0]	z_wb_dat_t;
-wire			z_wb_ack_t;
-wire			z_wb_err_t;
 
 //
 // Outputs for initiators are ORed from both mi_to_st blocks
@@ -391,186 +222,93 @@ wire			z_wb_err_t;
 assign i4_wb_dat_o = xi4_wb_dat_o | yi4_wb_dat_o;
 assign i4_wb_ack_o = xi4_wb_ack_o | yi4_wb_ack_o;
 assign i4_wb_err_o = xi4_wb_err_o | yi4_wb_err_o;
-assign i5_wb_dat_o = xi5_wb_dat_o | yi5_wb_dat_o;
-assign i5_wb_ack_o = xi5_wb_ack_o | yi5_wb_ack_o;
-assign i5_wb_err_o = xi5_wb_err_o | yi5_wb_err_o;
 
 //
-// From initiators to target 0
+// From initiators to target 0 (SRAM)
 //
-tc_mi_to_st #(t0_addr_w, t0_addr,
-	0, t0_addr_w, t0_addr) t0_ch(
+sram_mi_to_st 
+        #(
+        .addr_prefix_w      (addr_prefix_w), 
+        .t0_addr_prefix     (t0_addr_prefix)
+        ) 
+        t0_ch
+        (
 	.wb_clk_i(wb_clk_i),
 	.wb_rst_i(wb_rst_i),
 
-	.i4_wb_cyc_i(i4_wb_cyc_i),
+	.i4_wb_cyc_i(i4_wb_cyc_i),  // rdm -- RISC DATA MASTER
 	.i4_wb_stb_i(i4_wb_stb_i),
 	.i4_wb_adr_i(i4_wb_adr_i),
 	.i4_wb_sel_i(i4_wb_sel_i),
-	.i4_wb_we_i(i4_wb_we_i),
+	.i4_wb_we_i (i4_wb_we_i),
 	.i4_wb_dat_i(i4_wb_dat_i),
 	.i4_wb_dat_o(xi4_wb_dat_o),
 	.i4_wb_ack_o(xi4_wb_ack_o),
 	.i4_wb_err_o(xi4_wb_err_o),
 
-	.i5_wb_cyc_i(i5_wb_cyc_i),
+	.i5_wb_cyc_i(i5_wb_cyc_i),  // rim -- RISC INSTRUCTION MASTER
 	.i5_wb_stb_i(i5_wb_stb_i),
 	.i5_wb_adr_i(i5_wb_adr_i),
 	.i5_wb_sel_i(i5_wb_sel_i),
-	.i5_wb_we_i(i5_wb_we_i),
+	.i5_wb_we_i (i5_wb_we_i),
 	.i5_wb_dat_i(i5_wb_dat_i),
-	.i5_wb_dat_o(xi5_wb_dat_o),
-	.i5_wb_ack_o(xi5_wb_ack_o),
-	.i5_wb_err_o(xi5_wb_err_o),
+	.i5_wb_dat_o(i5_wb_dat_o),
+	.i5_wb_ack_o(i5_wb_ack_o),
+	.i5_wb_err_o(i5_wb_err_o),
 
-	.t0_wb_cyc_o(t0_wb_cyc_o),
+	.t0_wb_cyc_o(t0_wb_cyc_o),  // SRAM -- dual port memory
 	.t0_wb_stb_o(t0_wb_stb_o),
 	.t0_wb_adr_o(t0_wb_adr_o),
 	.t0_wb_sel_o(t0_wb_sel_o),
-	.t0_wb_we_o(t0_wb_we_o),
+	.t0_wb_we_o (t0_wb_we_o),
 	.t0_wb_dat_o(t0_wb_dat_o),
 	.t0_wb_dat_i(t0_wb_dat_i),
 	.t0_wb_ack_i(t0_wb_ack_i),
 	.t0_wb_err_i(t0_wb_err_i)
-
 );
 
 //
-// From initiators to targets 1-8 (upper part)
+// From rdm (RISC DATA MASTER) to targets 1 or 2 (SFIFO/SSIF)
 //
-tc_mi_to_st #(t1_addr_w, t1_addr,
-	1, t28c_addr_w, t28_addr) t18_ch_upper(
-	.wb_clk_i(wb_clk_i),
-	.wb_rst_i(wb_rst_i),
+si_to_2t 
+#(
+    .addr_prefix_w      (addr_prefix_w),
+    .addr_suffix_w      (addr_suffix_w),
+    .addr_prefix        (accel_addr_prefix),
+    .t0_addr_suffix     (t1_addr_suffix),
+    .t1_addr_suffix     (t2_addr_suffix)
+)
+si_to_accels 
+(
+    .i0_wb_cyc_i(i4_wb_cyc_i),
+    .i0_wb_stb_i(i4_wb_stb_i),
+    .i0_wb_adr_i(i4_wb_adr_i),
+    .i0_wb_sel_i(i4_wb_sel_i),
+    .i0_wb_we_i (i4_wb_we_i),
+    .i0_wb_dat_i(i4_wb_dat_i),
+    .i0_wb_dat_o(yi4_wb_dat_o),
+    .i0_wb_ack_o(yi4_wb_ack_o),
+    .i0_wb_err_o(yi4_wb_err_o),
 
-	.i4_wb_cyc_i(i4_wb_cyc_i),
-	.i4_wb_stb_i(i4_wb_stb_i),
-	.i4_wb_adr_i(i4_wb_adr_i),
-	.i4_wb_sel_i(i4_wb_sel_i),
-	.i4_wb_we_i(i4_wb_we_i),
-	.i4_wb_dat_i(i4_wb_dat_i),
-	.i4_wb_dat_o(yi4_wb_dat_o),
-	.i4_wb_ack_o(yi4_wb_ack_o),
-	.i4_wb_err_o(yi4_wb_err_o),
+    .t0_wb_cyc_o(t1_wb_cyc_o),
+    .t0_wb_stb_o(t1_wb_stb_o),
+    .t0_wb_adr_o(t1_wb_adr_o),
+    .t0_wb_sel_o(t1_wb_sel_o),
+    .t0_wb_we_o (t1_wb_we_o),
+    .t0_wb_dat_o(t1_wb_dat_o),
+    .t0_wb_dat_i(t1_wb_dat_i),
+    .t0_wb_ack_i(t1_wb_ack_i),
+    .t0_wb_err_i(t1_wb_err_i),
 
-	.i5_wb_cyc_i(i5_wb_cyc_i),
-	.i5_wb_stb_i(i5_wb_stb_i),
-	.i5_wb_adr_i(i5_wb_adr_i),
-	.i5_wb_sel_i(i5_wb_sel_i),
-	.i5_wb_we_i(i5_wb_we_i),
-	.i5_wb_dat_i(i5_wb_dat_i),
-	.i5_wb_dat_o(yi5_wb_dat_o),
-	.i5_wb_ack_o(yi5_wb_ack_o),
-	.i5_wb_err_o(yi5_wb_err_o),
-
-	.t0_wb_cyc_o(z_wb_cyc_i),
-	.t0_wb_stb_o(z_wb_stb_i),
-	.t0_wb_adr_o(z_wb_adr_i),
-	.t0_wb_sel_o(z_wb_sel_i),
-	.t0_wb_we_o(z_wb_we_i),
-	.t0_wb_dat_o(z_wb_dat_i),
-	.t0_wb_dat_i(z_wb_dat_t),
-	.t0_wb_ack_i(z_wb_ack_t),
-	.t0_wb_err_i(z_wb_err_t)
-
-);
-
-//
-// From initiators to targets 1-8 (lower part)
-//
-tc_si_to_mt #(t1_addr_w, t1_addr, t28i_addr_w, t2_addr, t3_addr,
-	t4_addr, t5_addr, t6_addr, t7_addr, t8_addr) t18_ch_lower(
-
-	.i0_wb_cyc_i(z_wb_cyc_i),
-	.i0_wb_stb_i(z_wb_stb_i),
-	.i0_wb_adr_i(z_wb_adr_i),
-	.i0_wb_sel_i(z_wb_sel_i),
-	.i0_wb_we_i(z_wb_we_i),
-	.i0_wb_dat_i(z_wb_dat_i),
-	.i0_wb_dat_o(z_wb_dat_t),
-	.i0_wb_ack_o(z_wb_ack_t),
-	.i0_wb_err_o(z_wb_err_t),
-
-	.t0_wb_cyc_o(t1_wb_cyc_o),
-	.t0_wb_stb_o(t1_wb_stb_o),
-	.t0_wb_adr_o(t1_wb_adr_o),
-	.t0_wb_sel_o(t1_wb_sel_o),
-	.t0_wb_we_o(t1_wb_we_o),
-	.t0_wb_dat_o(t1_wb_dat_o),
-	.t0_wb_dat_i(t1_wb_dat_i),
-	.t0_wb_ack_i(t1_wb_ack_i),
-	.t0_wb_err_i(t1_wb_err_i),
-
-	.t1_wb_cyc_o(t2_wb_cyc_o),
-	.t1_wb_stb_o(t2_wb_stb_o),
-	.t1_wb_adr_o(t2_wb_adr_o),
-	.t1_wb_sel_o(t2_wb_sel_o),
-	.t1_wb_we_o(t2_wb_we_o),
-	.t1_wb_dat_o(t2_wb_dat_o),
-	.t1_wb_dat_i(t2_wb_dat_i),
-	.t1_wb_ack_i(t2_wb_ack_i),
-	.t1_wb_err_i(t2_wb_err_i),
-
-	.t2_wb_cyc_o(t3_wb_cyc_o),
-	.t2_wb_stb_o(t3_wb_stb_o),
-	.t2_wb_adr_o(t3_wb_adr_o),
-	.t2_wb_sel_o(t3_wb_sel_o),
-	.t2_wb_we_o(t3_wb_we_o),
-	.t2_wb_dat_o(t3_wb_dat_o),
-	.t2_wb_dat_i(t3_wb_dat_i),
-	.t2_wb_ack_i(t3_wb_ack_i),
-	.t2_wb_err_i(t3_wb_err_i),
-
-	.t3_wb_cyc_o(t4_wb_cyc_o),
-	.t3_wb_stb_o(t4_wb_stb_o),
-	.t3_wb_adr_o(t4_wb_adr_o),
-	.t3_wb_sel_o(t4_wb_sel_o),
-	.t3_wb_we_o(t4_wb_we_o),
-	.t3_wb_dat_o(t4_wb_dat_o),
-	.t3_wb_dat_i(t4_wb_dat_i),
-	.t3_wb_ack_i(t4_wb_ack_i),
-	.t3_wb_err_i(t4_wb_err_i),
-
-	.t4_wb_cyc_o(t5_wb_cyc_o),
-	.t4_wb_stb_o(t5_wb_stb_o),
-	.t4_wb_adr_o(t5_wb_adr_o),
-	.t4_wb_sel_o(t5_wb_sel_o),
-	.t4_wb_we_o(t5_wb_we_o),
-	.t4_wb_dat_o(t5_wb_dat_o),
-	.t4_wb_dat_i(t5_wb_dat_i),
-	.t4_wb_ack_i(t5_wb_ack_i),
-	.t4_wb_err_i(t5_wb_err_i),
-
-	.t5_wb_cyc_o(t6_wb_cyc_o),
-	.t5_wb_stb_o(t6_wb_stb_o),
-	.t5_wb_adr_o(t6_wb_adr_o),
-	.t5_wb_sel_o(t6_wb_sel_o),
-	.t5_wb_we_o(t6_wb_we_o),
-	.t5_wb_dat_o(t6_wb_dat_o),
-	.t5_wb_dat_i(t6_wb_dat_i),
-	.t5_wb_ack_i(t6_wb_ack_i),
-	.t5_wb_err_i(t6_wb_err_i),
-
-	.t6_wb_cyc_o(t7_wb_cyc_o),
-	.t6_wb_stb_o(t7_wb_stb_o),
-	.t6_wb_adr_o(t7_wb_adr_o),
-	.t6_wb_sel_o(t7_wb_sel_o),
-	.t6_wb_we_o(t7_wb_we_o),
-	.t6_wb_dat_o(t7_wb_dat_o),
-	.t6_wb_dat_i(t7_wb_dat_i),
-	.t6_wb_ack_i(t7_wb_ack_i),
-	.t6_wb_err_i(t7_wb_err_i),
-
-	.t7_wb_cyc_o(t8_wb_cyc_o),
-	.t7_wb_stb_o(t8_wb_stb_o),
-	.t7_wb_adr_o(t8_wb_adr_o),
-	.t7_wb_sel_o(t8_wb_sel_o),
-	.t7_wb_we_o(t8_wb_we_o),
-	.t7_wb_dat_o(t8_wb_dat_o),
-	.t7_wb_dat_i(t8_wb_dat_i),
-	.t7_wb_ack_i(t8_wb_ack_i),
-	.t7_wb_err_i(t8_wb_err_i)
-
+    .t1_wb_cyc_o(t2_wb_cyc_o),
+    .t1_wb_stb_o(t2_wb_stb_o),
+    .t1_wb_adr_o(t2_wb_adr_o),
+    .t1_wb_sel_o(t2_wb_sel_o),
+    .t1_wb_we_o (t2_wb_we_o),
+    .t1_wb_dat_o(t2_wb_dat_o),
+    .t1_wb_dat_i(t2_wb_dat_i),
+    .t1_wb_ack_i(t2_wb_ack_i),
+    .t1_wb_err_i(t2_wb_err_i)
 );
 
 endmodule

@@ -78,8 +78,8 @@ module subsoc_top
   input                     mbox_afull_i,
   input                     mbox_empty_i,
 
-//
-// SSIF (Servo/Stepper InterFace)
+  //
+  // SSIF (Servo/Stepper InterFace)
   // WISHBONE Interface 1
   output                    wb_ssif_stb_o,
   output                    wb_ssif_cyc_o,
@@ -177,19 +177,6 @@ wire  	[1:0]		wb_rdm_bte;	// burst type extension
 //
 wire	[`OR1200_PIC_INTS-1:0]		pic_ints;
 wire                                    sig_tick;
-
-//
-// Flash controller slave i/f wires
-//
-wire 	[31:0]		wb_fs_dat_i;
-wire 	[31:0]		wb_fs_dat_o;
-wire 	[31:0]		wb_fs_adr_i;
-wire 	[3:0]		wb_fs_sel_i;
-wire			wb_fs_we_i;
-wire			wb_fs_cyc_i;
-wire			wb_fs_stb_i;
-wire			wb_fs_ack_o;
-wire			wb_fs_err_o;
 
 //
 // SPI controller slave i/f wires
@@ -315,61 +302,8 @@ assign pic_ints[`APP_INT_PS2] = 'b0;
 // SSIF
 assign wb_ssif_adr_o = wb_ssif_adr[WB_SSIF_AW-1:2];
 
-//
-// RISC Instruction address for Flash
-//
-// Until first access to real Flash area,
-// CPU instruction is fixed to jump to the Flash area.
-// After Flash area is accessed, CPU instructions 
-// come from the tc_top (wishbone "switch").
-//
-`ifdef START_UP
-reg jump_flash;
-reg [3:0] rif_counter;
-reg [31:0] rif_dat_int;
-reg rif_ack_int;
-
-always @(posedge wb_clk or negedge rstn)
-begin
-	if (!rstn) begin
-		jump_flash <= #1 1'b1;
-		rif_counter <= 4'h0;
-		rif_ack_int <= 1'b0;
-	end
-	else begin
-		rif_ack_int <= 1'b0;
-
-		if (wb_rim_cyc_o && (wb_rim_adr_o[31:32-`APP_ADDR_DEC_W] == `APP_ADDR_FLASH))
-			jump_flash <= #1 1'b0;
-		
-		if ( jump_flash == 1'b1 ) begin
-			if ( wb_rim_cyc_o && wb_rim_stb_o && ~wb_rim_we_o ) begin
-				rif_counter <= rif_counter + 1'b1;
-				rif_ack_int <= 1'b1;
-			end
-		end
-	end
-end
-
-always @ (rif_counter)
-begin
-	case ( rif_counter )
-		4'h0: rif_dat_int = { `OR1200_OR32_MOVHI , 5'h01 , 4'h0 , 1'b0 , `APP_ADDR_FLASH , 8'h00 };
-		4'h1: rif_dat_int = { `OR1200_OR32_ORI , 5'h01 , 5'h01 , 16'h0000 };
-		4'h2: rif_dat_int = { `OR1200_OR32_JR , 10'h000 , 5'h01 , 11'h000 };
-		4'h3: rif_dat_int = { `OR1200_OR32_NOP , 10'h000 , 16'h0000 };
-		default: rif_dat_int = 32'h0000_0000;
-	endcase
-end
-
-assign wb_rif_dat_i = jump_flash ? rif_dat_int : wb_rim_dat_i;
-
-assign wb_rif_ack_i = jump_flash ? rif_ack_int : wb_rim_ack_i;
-
-`else
 assign wb_rif_dat_i = wb_rim_dat_i;
 assign wb_rif_ack_i = wb_rim_ack_i;
-`endif
 
 
 //
@@ -487,51 +421,6 @@ or1200_top or1200_top (
 	.pic_ints_i	( pic_ints ),
         .sig_tick       ( sig_tick )
 );
-
-//
-// Startup OR1k
-//
-`ifdef START_UP
-OR1K_startup OR1K_startup0
-(
-    .wb_adr_i(wb_fs_adr_i[6:2]),
-    .wb_stb_i(wb_fs_stb_i),
-    .wb_cyc_i(wb_fs_cyc_i),
-    .wb_dat_o(wb_fs_dat_o),
-    .wb_ack_o(wb_fs_ack_o),
-    .wb_clk(wb_clk),
-    .wb_rst(wb_rst)
-);
-
-spi_flash_top #
-(
-   .divider(0),
-   .divider_len(2)
-)
-spi_flash_top0
-(
-   .wb_clk_i(wb_clk), 
-   .wb_rst_i(wb_rst),
-   .wb_adr_i(wb_sp_adr_i[4:2]),
-   .wb_dat_i(wb_sp_dat_i), 
-   .wb_dat_o(wb_sp_dat_o),
-   .wb_sel_i(wb_sp_sel_i),
-   .wb_we_i(wb_sp_we_i),
-   .wb_stb_i(wb_sp_stb_i), 
-   .wb_cyc_i(wb_sp_cyc_i),
-   .wb_ack_o(wb_sp_ack_o), 
-
-   .mosi_pad_o(spi_flash_mosi),
-   .miso_pad_i(spi_flash_miso),
-   .sclk_pad_o(spi_flash_sclk),
-   .ss_pad_o(spi_flash_ss)
-);
-`else
-assign wb_fs_dat_o = 32'h0000_0000;
-assign wb_fs_ack_o = 1'b0;
-assign wb_sp_dat_o = 32'h0000_0000;
-assign wb_sp_ack_o = 1'b0;
-`endif
 
 //
 // Instantiation of the SRAM controller
@@ -732,69 +621,17 @@ assign pic_ints[`APP_INT_ETH] = 1'b0;
 // Instantiation of the Traffic COP
 //
 subsoc_tc_top #(
-          .t0_addr_w    ( `APP_ADDR_DEC_W   ),
-	  .t0_addr      ( `APP_ADDR_SRAM    ),
-	  .t1_addr_w    ( `APP_ADDR_DEC_W   ),
-	  .t1_addr      ( `APP_ADDR_FLASH   ),
-	  .t28c_addr_w  ( `APP_ADDR_DECP_W  ),
-	  .t28_addr     ( `APP_ADDR_PERIP   ),
-	  .t28i_addr_w  ( `APP_ADDR_DEC_W   ),
-	  .t2_addr      ( `APP_ADDR_SPI     ),
-	  .t3_addr      ( `APP_ADDR_ETH     ),
-	  .t4_addr      ( `APP_ADDR_SFIFO   ),
-	  .t5_addr      ( `APP_ADDR_UART    ),
-	  .t6_addr      ( `APP_ADDR_PS2     ),
-	  .t7_addr      ( `APP_ADDR_SSIF    ),
-	  .t8_addr      ( `APP_ADDR_RES2    )
+          .addr_prefix_w    (`APP_ADDR_PREFIX_W       ),
+          .addr_suffix_w    (`APP_ADDR_SUFFIX_W       ),
+	  .t0_addr_prefix   (`APP_ADDR_PREFIX_SRAM    ),
+	  .accel_addr_prefix(`APP_ADDR_PREFIX_ACCEL   ),
+	  .t1_addr_suffix   (`ACCEL_ADDR_SUFFIX_SFIFO ),
+	  .t2_addr_suffix   (`ACCEL_ADDR_SUFFIX_SSIF  )
 	) tc_top (
 
 	// WISHBONE common
 	.wb_clk_i	( wb_clk ),
 	.wb_rst_i	( wb_rst ),
-
-	//obsolete: // WISHBONE Initiator 0
-	//obsolete: .i0_wb_cyc_i	( 1'b0 ),
-	//obsolete: .i0_wb_stb_i	( 1'b0 ),
-	//obsolete: .i0_wb_adr_i	( 32'h0000_0000 ),
-	//obsolete: .i0_wb_sel_i	( 4'b0000 ),
-	//obsolete: .i0_wb_we_i	( 1'b0 ),
-	//obsolete: .i0_wb_dat_i	( 32'h0000_0000 ),
-	//obsolete: .i0_wb_dat_o	( ),
-	//obsolete: .i0_wb_ack_o	( ),
-	//obsolete: .i0_wb_err_o	( ),
-
-	//obsolete: // WISHBONE Initiator 1   (em: Ethernet Master)
-	//obsolete: .i1_wb_cyc_i	( wb_em_cyc_o ),
-	//obsolete: .i1_wb_stb_i	( wb_em_stb_o ),
-	//obsolete: .i1_wb_adr_i	( wb_em_adr_o ),
-	//obsolete: .i1_wb_sel_i	( wb_em_sel_o ),
-	//obsolete: .i1_wb_we_i	( wb_em_we_o  ),
-	//obsolete: .i1_wb_dat_i	( wb_em_dat_o ),
-	//obsolete: .i1_wb_dat_o	( wb_em_dat_i ),
-	//obsolete: .i1_wb_ack_o	( wb_em_ack_i ),
-	//obsolete: .i1_wb_err_o	( wb_em_err_i ),
-
-	//obsolete: // WISHBONE Initiator 2
-	//obsolete: .i2_wb_cyc_i	( 1'b0 ),
-	//obsolete: .i2_wb_stb_i	( 1'b0 ),
-	//obsolete: .i2_wb_adr_i	( 32'h0000_0000 ),
-	//obsolete: .i2_wb_sel_i	( 4'b0000 ),
-	//obsolete: .i2_wb_we_i	( 1'b0 ),
-	//obsolete: .i2_wb_dat_i	( 32'h0000_0000 ),
-	//obsolete: .i2_wb_dat_o	( ),
-	//obsolete: .i2_wb_ack_o	( ),
-	//obsolete: .i2_wb_err_o	( ),
-
-	//obsolete: // WISHBONE Initiator 3   (dm: debug master)
-	//obsolete: .i3_wb_cyc_i	( wb_dm_cyc_o ),
-	//obsolete: .i3_wb_stb_i	( wb_dm_stb_o ),
-	//obsolete: .i3_wb_adr_i	( wb_dm_adr_o ),
-	//obsolete: .i3_wb_sel_i	( wb_dm_sel_o ),
-	//obsolete: .i3_wb_we_i	( wb_dm_we_o  ),
-	//obsolete: .i3_wb_dat_i	( wb_dm_dat_o ),
-	//obsolete: .i3_wb_dat_o	( wb_dm_dat_i ),
-	//obsolete: .i3_wb_ack_o	( wb_dm_ack_i ),
-	//obsolete: .i3_wb_err_o	( wb_dm_err_i ),
 
 	// WISHBONE Initiator 4   (rdm: or1200 data master)
 	.i4_wb_cyc_i	( wb_rdm_cyc_o ),
@@ -818,28 +655,6 @@ subsoc_tc_top #(
 	.i5_wb_ack_o	( wb_rim_ack_i ),
 	.i5_wb_err_o	( wb_rim_err_i ),
 
-	//obsolete: // WISHBONE Initiator 6
-	//obsolete: .i6_wb_cyc_i	( 1'b0 ),
-	//obsolete: .i6_wb_stb_i	( 1'b0 ),
-	//obsolete: .i6_wb_adr_i	( 32'h0000_0000 ),
-	//obsolete: .i6_wb_sel_i	( 4'b0000 ),
-	//obsolete: .i6_wb_we_i	( 1'b0 ),
-	//obsolete: .i6_wb_dat_i	( 32'h0000_0000 ),
-	//obsolete: .i6_wb_dat_o	( ),
-	//obsolete: .i6_wb_ack_o	( ),
-	//obsolete: .i6_wb_err_o	( ),
-
-	//obsolete: // WISHBONE Initiator 7
-	//obsolete: .i7_wb_cyc_i	( 1'b0 ),
-	//obsolete: .i7_wb_stb_i	( 1'b0 ),
-	//obsolete: .i7_wb_adr_i	( 32'h0000_0000 ),
-	//obsolete: .i7_wb_sel_i	( 4'b0000 ),
-	//obsolete: .i7_wb_we_i	( 1'b0 ),
-	//obsolete: .i7_wb_dat_i	( 32'h0000_0000 ),
-	//obsolete: .i7_wb_dat_o	( ),
-	//obsolete: .i7_wb_ack_o	( ),
-	//obsolete: .i7_wb_err_o	( ),
-
 	// WISHBONE Target 0 (ss: sram controller, 0x00)
 	.t0_wb_cyc_o	( wb_ss_cyc_i ),
 	.t0_wb_stb_o	( wb_ss_stb_i ),
@@ -851,93 +666,27 @@ subsoc_tc_top #(
 	.t0_wb_ack_i	( wb_ss_ack_o ),
 	.t0_wb_err_i	( wb_ss_err_o ),
 
-	// WISHBONE Target 1  (fs: flash start, 0x04)
-	.t1_wb_cyc_o	( wb_fs_cyc_i ),
-	.t1_wb_stb_o	( wb_fs_stb_i ),
-	.t1_wb_adr_o	( wb_fs_adr_i ),
-	.t1_wb_sel_o	( wb_fs_sel_i ),
-	.t1_wb_we_o	( wb_fs_we_i  ),
-	.t1_wb_dat_o	( wb_fs_dat_i ),
-	.t1_wb_dat_i	( wb_fs_dat_o ),
-	.t1_wb_ack_i	( wb_fs_ack_o ),
-	.t1_wb_err_i	( wb_fs_err_o ),
-
-	// WISHBONE Target 2  (sp: spi flash)
-	.t2_wb_cyc_o	( wb_sp_cyc_i ),
-	.t2_wb_stb_o	( wb_sp_stb_i ),
-	.t2_wb_adr_o	( wb_sp_adr_i ),
-	.t2_wb_sel_o	( wb_sp_sel_i ),
-	.t2_wb_we_o	( wb_sp_we_i  ),
-	.t2_wb_dat_o	( wb_sp_dat_i ),
-	.t2_wb_dat_i	( wb_sp_dat_o ),
-	.t2_wb_ack_i	( wb_sp_ack_o ),
-	.t2_wb_err_i	( wb_sp_err_o ),
-
-	// WISHBONE Target 3  (es: ethernet slave)
-	.t3_wb_cyc_o	( wb_es_cyc_i ),
-	.t3_wb_stb_o	( wb_es_stb_i ),
-	.t3_wb_adr_o	( wb_es_adr_i ),
-	.t3_wb_sel_o	( wb_es_sel_i ),
-	.t3_wb_we_o	( wb_es_we_i  ),
-	.t3_wb_dat_o	( wb_es_dat_i ),
-	.t3_wb_dat_i	( wb_es_dat_o ),
-	.t3_wb_ack_i	( wb_es_ack_o ),
-	.t3_wb_err_i	( wb_es_err_o ),
-
-	// WISHBONE Target 4 (sfifos: sync fifo slave, 0x9d)
-	.t4_wb_cyc_o	( wb_sfifos_cyc_i ),
-	.t4_wb_stb_o	( wb_sfifos_stb_i ),
-	.t4_wb_adr_o	( wb_sfifos_adr_i ),
-	.t4_wb_sel_o	( wb_sfifos_sel_i ),
-	.t4_wb_we_o	( wb_sfifos_we_i  ),
-	.t4_wb_dat_o	( wb_sfifos_dat_i ),
-	.t4_wb_dat_i	( wb_sfifos_dat_o ),
-	.t4_wb_ack_i	( wb_sfifos_ack_o ),
-	.t4_wb_err_i	( wb_sfifos_err_o ),
+	// WISHBONE Target 1 (sfifos: sync fifo slave, 0x9d)
+	.t1_wb_cyc_o	( wb_sfifos_cyc_i ),
+	.t1_wb_stb_o	( wb_sfifos_stb_i ),
+	.t1_wb_adr_o	( wb_sfifos_adr_i ),
+	.t1_wb_sel_o	( wb_sfifos_sel_i ),
+	.t1_wb_we_o	( wb_sfifos_we_i  ),
+	.t1_wb_dat_o	( wb_sfifos_dat_i ),
+	.t1_wb_dat_i	( wb_sfifos_dat_o ),
+	.t1_wb_ack_i	( wb_sfifos_ack_o ),
+	.t1_wb_err_i	( wb_sfifos_err_o ),
 	
-	// WISHBONE Target 5 (uart slave)
-	.t5_wb_cyc_o	( wb_us_cyc_i ),
-	.t5_wb_stb_o	( wb_us_stb_i ),
-	.t5_wb_adr_o	( wb_us_adr_i ),
-	.t5_wb_sel_o	( wb_us_sel_i ),
-	.t5_wb_we_o	( wb_us_we_i  ),
-	.t5_wb_dat_o	( wb_us_dat_i ),
-	.t5_wb_dat_i	( wb_us_dat_o ),
-	.t5_wb_ack_i	( wb_us_ack_o ),
-	.t5_wb_err_i	( wb_us_err_o ),
-
-	// WISHBONE Target 6 ()
-	.t6_wb_cyc_o	( ),
-	.t6_wb_stb_o	( ),
-	.t6_wb_adr_o	( ),
-	.t6_wb_sel_o	( ),
-	.t6_wb_we_o	( ),
-	.t6_wb_dat_o	( ),
-	.t6_wb_dat_i	( 32'h0000_0000 ),
-	.t6_wb_ack_i	( 1'b0 ),
-	.t6_wb_err_i	( 1'b1 ),
-
-	// WISHBONE Target 7 (ssifs: SSIF Slave, 0x9e)
-	.t7_wb_cyc_o	( wb_ssif_cyc_o ),
-	.t7_wb_stb_o	( wb_ssif_stb_o ),
-	.t7_wb_adr_o	( wb_ssif_adr   ),
-	.t7_wb_sel_o	( wb_ssif_sel_o ),
-	.t7_wb_we_o	( wb_ssif_we_o  ),
-	.t7_wb_dat_o	( wb_ssif_dat_o ),
-	.t7_wb_dat_i	( wb_ssif_dat_i ),
-	.t7_wb_ack_i	( wb_ssif_ack_i ),
-	.t7_wb_err_i	( wb_ssif_err_i ),
-
-	// WISHBONE Target 8 (0xf0)
-	.t8_wb_cyc_o	( ),
-	.t8_wb_stb_o	( ),
-	.t8_wb_adr_o	( ),
-	.t8_wb_sel_o	( ),
-	.t8_wb_we_o	( ),
-	.t8_wb_dat_o	( ),
-	.t8_wb_dat_i	( 32'h0000_0000 ),
-	.t8_wb_ack_i	( 1'b0 ),
-	.t8_wb_err_i	( 1'b1 )
+	// WISHBONE Target 2 (ssifs: SSIF Slave, 0x9e)
+	.t2_wb_cyc_o	( wb_ssif_cyc_o ),
+	.t2_wb_stb_o	( wb_ssif_stb_o ),
+	.t2_wb_adr_o	( wb_ssif_adr   ),
+	.t2_wb_sel_o	( wb_ssif_sel_o ),
+	.t2_wb_we_o	( wb_ssif_we_o  ),
+	.t2_wb_dat_o	( wb_ssif_dat_o ),
+	.t2_wb_dat_i	( wb_ssif_dat_i ),
+	.t2_wb_ack_i	( wb_ssif_ack_i ),
+	.t2_wb_err_i	( wb_ssif_err_i )
 );
 
 //initial begin

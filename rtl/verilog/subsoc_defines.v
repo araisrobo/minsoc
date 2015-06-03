@@ -32,11 +32,6 @@
 `define FPGA_TAP
 
 //
-// Start-up circuit (only necessary later to load firmware automatically from SPI memory)
-//
-//`define START_UP
-
-//
 // Connected modules
 //
 `define UART
@@ -56,15 +51,14 @@
 //
 // Address map
 //
-`define APP_ADDR_DEC_W	8
-`define APP_ADDR_SRAM	`APP_ADDR_DEC_W'h00   // t0
-`define APP_ADDR_FLASH	`APP_ADDR_DEC_W'h04   // t1
-`define APP_ADDR_DECP_W  4
-`define APP_ADDR_PERIP  `APP_ADDR_DECP_W'h9
-`define APP_ADDR_SFIFO	`APP_ADDR_DEC_W'h9d   // t4, SYNC_FIFO
-`define APP_ADDR_SSIF	`APP_ADDR_DEC_W'h9e   // t7, Servo/Stepper InterFace
-`define APP_ADDR_SPI	`APP_ADDR_DEC_W'h97
-`define APP_ADDR_ETH	`APP_ADDR_DEC_W'h92
-`define APP_ADDR_UART	`APP_ADDR_DEC_W'h90
-`define APP_ADDR_PS2	`APP_ADDR_DEC_W'h94
-`define APP_ADDR_RES2	`APP_ADDR_DEC_W'h9f
+`define APP_ADDR_PREFIX_W	4
+`define APP_ADDR_SUFFIX_W       4
+`define APP_ADDR_PREFIX_SRAM	`APP_ADDR_PREFIX_W'h0   // SRAM for program and data
+`define APP_ADDR_PREFIX_ACCEL   `APP_ADDR_PREFIX_W'h9   // Accel Components Address Prefix: 0x9[F~0]
+`define ACCEL_ADDR_SUFFIX_SFIFO	`APP_ADDR_SUFFIX_W'hd   // SFIFO, SYNC_FIFO, 0x9d..
+`define ACCEL_ADDR_SUFFIX_SSIF	`APP_ADDR_SUFFIX_W'he   // SSIF, Servo/Stepper InterFace, 0x9e..
+// `define APP_ADDR_SPI	`APP_ADDR_DEC_W'h97
+// `define APP_ADDR_ETH	`APP_ADDR_DEC_W'h92
+// `define APP_ADDR_UART	`APP_ADDR_DEC_W'h90
+// `define APP_ADDR_PS2	`APP_ADDR_DEC_W'h94
+// `define APP_ADDR_RES2	`APP_ADDR_DEC_W'h9f
