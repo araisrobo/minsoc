@@ -1,14 +1,14 @@
 `include "subsoc_defines.v"
 `include "or1200_defines.v"
 
-module subsoc_top 
+module subsoc_top
 #(
   parameter           SFIFO_DW        = 16,   // data width for SYNC_FIFO
   parameter           WB_SSIF_AW      = 0,
   parameter           WB_DW           = 0,
   parameter           WOU_DW          = 0,
-  //obsolete: parameter           DIN_W           = 16,
-  //obsolete: parameter           DOUT_W          = 8,
+  parameter           ADC_CMD_W       = 0,
+  parameter           ADC_CH_W        = 0,
   parameter           ADC_W           = 0,
   parameter           DAC_W           = 0
 )
@@ -20,50 +20,35 @@ module subsoc_top
   input               or32_en_i,          // (1)enable (0)reset OR32
   input   [31:0]      or32_prog_addr_i,   // addr for OR32_PROG
   input   [31:0]      or32_prog_data_i,   // data for OR32_PROG
-  input               or32_prog_en_i      // (1)prog addr,data to OR32
-  
-//
-// SFIFO_IF (sync fofo interface)
-//
-// `ifdef SFIFO_IF
-  ,
+  input               or32_prog_en_i,     // (1)prog addr,data to OR32
+
   output                    sfifo_rd_o,
-  input                     sfifo_full_i,
+  input                     sfifo_full_i,   // connects to JFIFO.BURST_RD_RDY
   input                     sfifo_empty_i,
   input   [SFIFO_DW-1:0]    sfifo_di,
   input                     sfifo_bp_tick_i,
 
-  // RT_CMD Interface (clk_250)
-  output                    rt_cmd_rst_o,
-  input   [WB_DW-1:0]       rt_cmd_i,
+//rt_cmd:  // RT_CMD Interface (clk_250)
+//rt_cmd:  output                    rt_cmd_rst_o,
+//rt_cmd:  input   [WB_DW-1:0]       rt_cmd_i,
 
   // GPIO Interface (clk_250)
   // SYNC_DOUT
   output  [WB_DW-1:0]       dout_0_o,
   output  [WB_DW-1:0]       dout_1_o,
+  output  [WB_DW-1:0]       dout_2_o,
   input                     alarm_i,
   // SYNC_DIN
   input   [WB_DW-1:0]       din_0_i,
   input   [WB_DW-1:0]       din_1_i,
-  input   [15:0]            din_2_i,
+  input   [WB_DW-1:0]       din_2_i,
 
   // Aanlog to Digital Converter Inputs
-  input   [ADC_W-1:0]       adc_0_i,
-  input   [ADC_W-1:0]       adc_1_i,
-  input   [ADC_W-1:0]       adc_2_i,
-  input   [ADC_W-1:0]       adc_3_i,
-  input   [ADC_W-1:0]       adc_4_i,
-  input   [ADC_W-1:0]       adc_5_i,
-  input   [ADC_W-1:0]       adc_6_i,
-  input   [ADC_W-1:0]       adc_7_i,
-  input   [ADC_W-1:0]       adc_8_i,
-  input   [ADC_W-1:0]       adc_9_i,
-  input   [ADC_W-1:0]       adc_10_i,
-  input   [ADC_W-1:0]       adc_11_i,
-  input   [ADC_W-1:0]       adc_12_i,
-  input   [ADC_W-1:0]       adc_13_i,
-  input   [ADC_W-1:0]       adc_14_i,
-  input   [ADC_W-1:0]       adc_15_i,
+  input   [ADC_W-1:0]       adc_lo_i,
+  input   [ADC_W-1:0]       adc_hi_i,
+  output  [ADC_CH_W-2:0]    adc_ch_sel_o,
+  output  [ADC_CMD_W-1:0]   adc_pre_o,  // ADC_PREAMBLE
+  output  [ADC_CMD_W-1:0]   adc_cmd_o,  // ADC_CMD
   
   // Digital to Analog Converter Outputs
   output  [DAC_W-1:0]       dac_0_o,
@@ -461,8 +446,8 @@ sfifo_if_top #(
   .WB_DW              ( 32        ),
   .WOU_DW             ( WOU_DW    ),  // WOU data bus width
   .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
-  // .DOUT_W             ( DOUT_W    ),
-  // .DIN_W              ( DIN_W     ),
+  .ADC_CMD_W          ( ADC_CMD_W ),  // ADC_PREAMBLE, ADC_CMD
+  .ADC_CH_W           ( ADC_CH_W  ),  // width for ADC channel select signal
   .ADC_W              ( ADC_W     ),  // width for ADC value
   .DAC_W              ( DAC_W     )   // width for DAC command
 ) sfifo_if_top (
@@ -483,7 +468,7 @@ sfifo_if_top #(
 
   // SFIFO Interface (clk_500)
   .sfifo_rd_o         ( sfifo_rd_o           ),
-  .sfifo_full_i       ( sfifo_full_i         ),
+  .sfifo_full_i       ( sfifo_full_i         ), // connects to JFIFO.BURST_RD_RDY
   .sfifo_empty_i      ( sfifo_empty_i        ),
   .sfifo_di           ( sfifo_di             ),
   
@@ -496,15 +481,16 @@ sfifo_if_top #(
 
   // SFIFO_CTRL Interface (clk_250)
   .sfifo_bp_tick_i    ( sfifo_bp_tick_i     ),
-  
-  // RT_CMD Interface (clk_250)
-  .rt_cmd_rst_o       ( rt_cmd_rst_o        ),
-  .rt_cmd_i           ( rt_cmd_i            ),
+
+//rt_cmd:  // RT_CMD Interface (clk_250)
+//rt_cmd:  .rt_cmd_rst_o       ( rt_cmd_rst_o        ),
+//rt_cmd:  .rt_cmd_i           ( rt_cmd_i            ),
   
   // GPIO Interface (clk_250)
   // SYNC_DOUT
   .dout_0_o           ( dout_0_o ),
   .dout_1_o           ( dout_1_o ),
+  .dout_2_o           ( dout_2_o ),
   .alarm_i            ( alarm_i ),
   // SYNC_DIN
   .din_0_i            ( din_0_i ),
@@ -512,22 +498,11 @@ sfifo_if_top #(
   .din_2_i            ( din_2_i ),
 
   // ADC Input
-  .adc_0_i            ( adc_0_i ),
-  .adc_1_i            ( adc_1_i ),
-  .adc_2_i            ( adc_2_i ),
-  .adc_3_i            ( adc_3_i ),
-  .adc_4_i            ( adc_4_i ),
-  .adc_5_i            ( adc_5_i ),
-  .adc_6_i            ( adc_6_i ),
-  .adc_7_i            ( adc_7_i ),
-  .adc_8_i            ( adc_8_i ),
-  .adc_9_i            ( adc_9_i ),
-  .adc_10_i           ( adc_10_i ),
-  .adc_11_i           ( adc_11_i ),
-  .adc_12_i           ( adc_12_i ),
-  .adc_13_i           ( adc_13_i ),
-  .adc_14_i           ( adc_14_i ),
-  .adc_15_i           ( adc_15_i ),
+  .adc_lo_i           ( adc_lo_i ),
+  .adc_hi_i           ( adc_hi_i ),
+  .adc_ch_sel_o       ( adc_ch_sel_o ),
+  .adc_pre_o          ( adc_pre_o ),
+  .adc_cmd_o          ( adc_cmd_o ),
   
   // DAC output
   .dac_0_o            ( dac_0_o ),
