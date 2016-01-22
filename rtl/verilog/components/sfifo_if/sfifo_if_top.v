@@ -10,6 +10,7 @@
 `define SFIFO_DIN_0         5'h4    // 0x10 ~ 0x13
 `define SFIFO_DIN_1         5'h5    // 0x14 ~ 0x17
 `define SFIFO_DIN_2         5'h6    // 0x18 ~ 0x1B 00110..
+`define SFIFO_DIN_3         5'h7    // 0x1C ~ 0x1F 00111..
 `define SFIFO_ADC_BASE      5'b01??? // 0x20 ~ 0x3F, ADC Ch0 ~ Ch15
 `define SFIFO_ADC_01        3'h0    
 `define SFIFO_ADC_23        3'h1 
@@ -95,7 +96,8 @@ module sfifo_if_top
   // SYNC_DIN
   input       [WB_DW-1:0]           din_0_i,    
   input       [WB_DW-1:0]           din_1_i,  
-  input       [WB_DW-1:0]           din_2_i,    // support up to 96-bits of DIN
+  input       [WB_DW-1:0]           din_2_i,    
+  input       [WB_DW-1:0]           din_3_i,    // support up to 128-bits of DIN
   
   // ADC_SPI value (clk_250)
   input       [ADC_W-1:0]           adc_lo_i,
@@ -247,6 +249,7 @@ begin
       `SFIFO_DIN_0:     wb_dat_o  <= {din_0_i};
       `SFIFO_DIN_1:     wb_dat_o  <= {din_1_i};
       `SFIFO_DIN_2:     wb_dat_o  <= {din_2_i};
+      `SFIFO_DIN_3:     wb_dat_o  <= {din_3_i};
       `SFIFO_DOUT_0:    wb_dat_o  <= {dout_0_o};
       `SFIFO_DOUT_1:    wb_dat_o  <= {dout_1_o};
       `SFIFO_DOUT_2:    wb_dat_o  <= {dout_2_o};

@@ -42,6 +42,7 @@ module subsoc_top
   input   [WB_DW-1:0]       din_0_i,
   input   [WB_DW-1:0]       din_1_i,
   input   [WB_DW-1:0]       din_2_i,
+  input   [WB_DW-1:0]       din_3_i,
 
   // Aanlog to Digital Converter Inputs
   input   [ADC_W-1:0]       adc_lo_i,
@@ -496,6 +497,7 @@ sfifo_if_top #(
   .din_0_i            ( din_0_i ),
   .din_1_i            ( din_1_i ),
   .din_2_i            ( din_2_i ),
+  .din_3_i            ( din_3_i ),
 
   // ADC Input
   .adc_lo_i           ( adc_lo_i ),
