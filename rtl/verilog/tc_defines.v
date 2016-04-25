@@ -25,7 +25,7 @@
 //
 // cyc + stb + address bus width +
 // byte select bus width + we + data bus width
-//
-`define TC_IIN_W	1+1+1+`TC_AW+`TC_BSW+1+`TC_DW
+// (remove wb_err)
+`define TC_IIN_W	1+1+`TC_AW+`TC_BSW+1+`TC_DW
 
 

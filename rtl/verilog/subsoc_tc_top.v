@@ -78,7 +78,6 @@ module subsoc_tc_top (
 	i4_wb_dat_i,
 	i4_wb_dat_o,
 	i4_wb_ack_o,
-	i4_wb_err_o,
 
 	i5_wb_cyc_i,
 	i5_wb_stb_i,
@@ -88,7 +87,6 @@ module subsoc_tc_top (
 	i5_wb_dat_i,
 	i5_wb_dat_o,
 	i5_wb_ack_o,
-	i5_wb_err_o,
 
 	t0_wb_cyc_o,
 	t0_wb_stb_o,
@@ -98,7 +96,6 @@ module subsoc_tc_top (
 	t0_wb_dat_o,
 	t0_wb_dat_i,
 	t0_wb_ack_i,
-	t0_wb_err_i,
 	
         t1_wb_cyc_o,
 	t1_wb_stb_o,
@@ -108,7 +105,6 @@ module subsoc_tc_top (
 	t1_wb_dat_o,
 	t1_wb_dat_i,
 	t1_wb_ack_i,
-	t1_wb_err_i,
 
 	t2_wb_cyc_o,
 	t2_wb_stb_o,
@@ -117,8 +113,7 @@ module subsoc_tc_top (
 	t2_wb_we_o,
 	t2_wb_dat_o,
 	t2_wb_dat_i,
-	t2_wb_ack_i,
-	t2_wb_err_i
+	t2_wb_ack_i
 );
 
 //
@@ -148,7 +143,6 @@ input			i4_wb_we_i;
 input	[`TC_DW-1:0]	i4_wb_dat_i;
 output	[`TC_DW-1:0]	i4_wb_dat_o;
 output			i4_wb_ack_o;
-output			i4_wb_err_o;
 
 //
 // WB slave i/f connecting initiator 5
@@ -161,7 +155,6 @@ input			i5_wb_we_i;
 input	[`TC_DW-1:0]	i5_wb_dat_i;
 output	[`TC_DW-1:0]	i5_wb_dat_o;
 output			i5_wb_ack_o;
-output			i5_wb_err_o;
 
 //
 // WB master i/f connecting target 0
@@ -174,7 +167,6 @@ output			t0_wb_we_o;
 output	[`TC_DW-1:0]	t0_wb_dat_o;
 input	[`TC_DW-1:0]	t0_wb_dat_i;
 input			t0_wb_ack_i;
-input			t0_wb_err_i;
 
 //
 // WB master i/f connecting target 1
@@ -187,7 +179,6 @@ output			t1_wb_we_o;
 output	[`TC_DW-1:0]	t1_wb_dat_o;
 input	[`TC_DW-1:0]	t1_wb_dat_i;
 input			t1_wb_ack_i;
-input			t1_wb_err_i;
 
 //
 // WB master i/f connecting target 2
@@ -200,7 +191,6 @@ output			t2_wb_we_o;
 output	[`TC_DW-1:0]	t2_wb_dat_o;
 input	[`TC_DW-1:0]	t2_wb_dat_i;
 input			t2_wb_ack_i;
-input			t2_wb_err_i;
 
 //
 // Internal wires & registers
@@ -211,17 +201,14 @@ input			t2_wb_err_i;
 //
 wire	[`TC_DW-1:0]	xi4_wb_dat_o;
 wire			xi4_wb_ack_o;
-wire			xi4_wb_err_o;
 wire	[`TC_DW-1:0]	yi4_wb_dat_o;
 wire			yi4_wb_ack_o;
-wire			yi4_wb_err_o;
 
 //
 // Outputs for initiators are ORed from both mi_to_st blocks
 //
 assign i4_wb_dat_o = xi4_wb_dat_o | yi4_wb_dat_o;
 assign i4_wb_ack_o = xi4_wb_ack_o | yi4_wb_ack_o;
-assign i4_wb_err_o = xi4_wb_err_o | yi4_wb_err_o;
 
 //
 // From initiators to target 0 (SRAM)
@@ -244,7 +231,6 @@ sram_mi_to_st
 	.i4_wb_dat_i(i4_wb_dat_i),
 	.i4_wb_dat_o(xi4_wb_dat_o),
 	.i4_wb_ack_o(xi4_wb_ack_o),
-	.i4_wb_err_o(xi4_wb_err_o),
 
 	.i5_wb_cyc_i(i5_wb_cyc_i),  // rim -- RISC INSTRUCTION MASTER
 	.i5_wb_stb_i(i5_wb_stb_i),
@@ -254,7 +240,6 @@ sram_mi_to_st
 	.i5_wb_dat_i(i5_wb_dat_i),
 	.i5_wb_dat_o(i5_wb_dat_o),
 	.i5_wb_ack_o(i5_wb_ack_o),
-	.i5_wb_err_o(i5_wb_err_o),
 
 	.t0_wb_cyc_o(t0_wb_cyc_o),  // SRAM -- dual port memory
 	.t0_wb_stb_o(t0_wb_stb_o),
@@ -263,8 +248,7 @@ sram_mi_to_st
 	.t0_wb_we_o (t0_wb_we_o),
 	.t0_wb_dat_o(t0_wb_dat_o),
 	.t0_wb_dat_i(t0_wb_dat_i),
-	.t0_wb_ack_i(t0_wb_ack_i),
-	.t0_wb_err_i(t0_wb_err_i)
+	.t0_wb_ack_i(t0_wb_ack_i)
 );
 
 //
@@ -288,7 +272,6 @@ si_to_accels
     .i0_wb_dat_i(i4_wb_dat_i),
     .i0_wb_dat_o(yi4_wb_dat_o),
     .i0_wb_ack_o(yi4_wb_ack_o),
-    .i0_wb_err_o(yi4_wb_err_o),
 
     .t0_wb_cyc_o(t1_wb_cyc_o),
     .t0_wb_stb_o(t1_wb_stb_o),
@@ -298,7 +281,6 @@ si_to_accels
     .t0_wb_dat_o(t1_wb_dat_o),
     .t0_wb_dat_i(t1_wb_dat_i),
     .t0_wb_ack_i(t1_wb_ack_i),
-    .t0_wb_err_i(t1_wb_err_i),
 
     .t1_wb_cyc_o(t2_wb_cyc_o),
     .t1_wb_stb_o(t2_wb_stb_o),
@@ -307,8 +289,7 @@ si_to_accels
     .t1_wb_we_o (t2_wb_we_o),
     .t1_wb_dat_o(t2_wb_dat_o),
     .t1_wb_dat_i(t2_wb_dat_i),
-    .t1_wb_ack_i(t2_wb_ack_i),
-    .t1_wb_err_i(t2_wb_err_i)
+    .t1_wb_ack_i(t2_wb_ack_i)
 );
 
 endmodule

@@ -56,7 +56,7 @@ module subsoc_onchip_ram_top (
   wb_clk_i, wb_rst_i, 
  
   wb_dat_i, wb_dat_o, wb_adr_i, wb_sel_i, wb_we_i, wb_cyc_i, 
-  wb_stb_i, wb_ack_o, wb_err_o,
+  wb_stb_i, wb_ack_o, /* wb_err_o,*/
   
   // OR32 PROG interface
   prog_addr_i,    // addr for OR32_PROG
@@ -88,7 +88,7 @@ input           wb_we_i;
 input           wb_cyc_i; 
 input           wb_stb_i; 
 output reg      wb_ack_o; 
-output reg      wb_err_o; 
+//bypass_wb_err: output reg      wb_err_o; 
   
 // OR32 PROG interface
 input  [RAM_AW+1:2]   prog_addr_i;      // addr for OR32_PROG
@@ -104,7 +104,7 @@ wire [31:0] wb_dat_o;
 // reg    ack_we; 
 // reg    ack_re; 
 wire        wb_ack;
-wire        wb_err;
+//bypass wb_err: wire        wb_err;
 
 // 
 // Aliases and simple assignments 
@@ -117,22 +117,22 @@ assign be_i[1] = wb_cyc_i & wb_stb_i & wb_sel_i[1];
 assign be_i[2] = wb_cyc_i & wb_stb_i & wb_sel_i[2]; 
 assign be_i[3] = wb_cyc_i & wb_stb_i & wb_sel_i[3]; 
 
-// 
-// WB error
-// 
-assign wb_err = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:RAM_AW+2]);  // If Access to > (8-bit leading prefix ignored) 
-always @ (posedge wb_clk_i) 
-begin 
-if (wb_rst_i) 
-    wb_err_o <= 1'b0; 
-else
-    wb_err_o <= #1 (wb_err); 
-end 
+//bypass_wb_err: // 
+//bypass_wb_err: // WB error
+//bypass_wb_err: // 
+//bypass_wb_err: assign wb_err = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:RAM_AW+2]);  // If Access to > (8-bit leading prefix ignored) 
+//bypass_wb_err: always @ (posedge wb_clk_i) 
+//bypass_wb_err: begin 
+//bypass_wb_err: if (wb_rst_i) 
+//bypass_wb_err:     wb_err_o <= 1'b0; 
+//bypass_wb_err: else
+//bypass_wb_err:     wb_err_o <= #1 (wb_err); 
+//bypass_wb_err: end 
  
 // 
 // WB acknowledge 
 // 
-assign wb_ack = (wb_cyc_i & wb_stb_i & ~wb_err & ~wb_ack_o);
+assign wb_ack = (wb_cyc_i & wb_stb_i /* & ~wb_err */ & ~wb_ack_o);
 always @ (posedge wb_clk_i) 
 begin 
 if (wb_rst_i) 

@@ -17,7 +17,6 @@ module si_to_2t (
 	i0_wb_dat_i,
 	i0_wb_dat_o,
 	i0_wb_ack_o,
-	i0_wb_err_o,
 
 	t0_wb_cyc_o,
 	t0_wb_stb_o,
@@ -27,7 +26,6 @@ module si_to_2t (
 	t0_wb_dat_o,
 	t0_wb_dat_i,
 	t0_wb_ack_i,
-	t0_wb_err_i,
 
 	t1_wb_cyc_o,
 	t1_wb_stb_o,
@@ -36,8 +34,7 @@ module si_to_2t (
 	t1_wb_we_o,
 	t1_wb_dat_o,
 	t1_wb_dat_i,
-	t1_wb_ack_i,
-	t1_wb_err_i
+	t1_wb_ack_i
 );
 
 //
@@ -64,7 +61,6 @@ input			i0_wb_we_i;
 input	[`TC_DW-1:0]	i0_wb_dat_i;
 output	[`TC_DW-1:0]	i0_wb_dat_o;
 output			i0_wb_ack_o;
-output			i0_wb_err_o;
 
 //
 // WB master i/f connecting target 0
@@ -77,7 +73,6 @@ output			t0_wb_we_o;
 output	[`TC_DW-1:0]	t0_wb_dat_o;
 input	[`TC_DW-1:0]	t0_wb_dat_i;
 input			t0_wb_ack_i;
-input			t0_wb_err_i;
 
 //
 // WB master i/f connecting target 1
@@ -90,7 +85,6 @@ output			t1_wb_we_o;
 output	[`TC_DW-1:0]	t1_wb_dat_o;
 input	[`TC_DW-1:0]	t1_wb_dat_i;
 input			t1_wb_ack_i;
-input			t1_wb_err_i;
 
 //
 // Internal wires & registers
@@ -107,21 +101,21 @@ wire                    accel_sel;
 //
 assign i0_in = {i0_wb_cyc_i, i0_wb_stb_i, i0_wb_adr_i,
 		i0_wb_sel_i, i0_wb_we_i, i0_wb_dat_i};
-assign {i0_wb_dat_o, i0_wb_ack_o, i0_wb_err_o} = i0_out;
+assign {i0_wb_dat_o, i0_wb_ack_o} = i0_out;
 
 //
 // Group WB target 0 i/f inputs and outputs
 //
 assign {t0_wb_cyc_o, t0_wb_stb_o, t0_wb_adr_o,
 		t0_wb_sel_o, t0_wb_we_o, t0_wb_dat_o} = t0_out;
-assign t0_in = {t0_wb_dat_i, t0_wb_ack_i, t0_wb_err_i};
+assign t0_in = {t0_wb_dat_i, t0_wb_ack_i};
 
 //
 // Group WB target 1 i/f inputs and outputs
 //
 assign {t1_wb_cyc_o, t1_wb_stb_o, t1_wb_adr_o,
 		t1_wb_sel_o, t1_wb_we_o, t1_wb_dat_o} = t1_out;
-assign t1_in = {t1_wb_dat_i, t1_wb_ack_i, t1_wb_err_i};
+assign t1_in = {t1_wb_dat_i, t1_wb_ack_i};
 
 //
 // Assign to WB target i/f outputs

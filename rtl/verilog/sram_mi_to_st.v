@@ -19,7 +19,6 @@ module sram_mi_to_st (
 	i4_wb_dat_i,
 	i4_wb_dat_o,
 	i4_wb_ack_o,
-	i4_wb_err_o,
 
 	i5_wb_cyc_i,
 	i5_wb_stb_i,
@@ -29,7 +28,6 @@ module sram_mi_to_st (
 	i5_wb_dat_i,
 	i5_wb_dat_o,
 	i5_wb_ack_o,
-	i5_wb_err_o,
 
 	t0_wb_cyc_o,
 	t0_wb_stb_o,
@@ -39,7 +37,6 @@ module sram_mi_to_st (
 	t0_wb_dat_o,
 	t0_wb_dat_i,
 	t0_wb_ack_i,
-	t0_wb_err_i
 );
 
 //
@@ -65,7 +62,6 @@ input			i4_wb_we_i;
 input	[`TC_DW-1:0]	i4_wb_dat_i;
 output	[`TC_DW-1:0]	i4_wb_dat_o;
 output			i4_wb_ack_o;
-output			i4_wb_err_o;
 
 //
 // WB slave i/f connecting initiator 5
@@ -78,7 +74,6 @@ input			i5_wb_we_i;
 input	[`TC_DW-1:0]	i5_wb_dat_i;
 output	[`TC_DW-1:0]	i5_wb_dat_o;
 output			i5_wb_ack_o;
-output			i5_wb_err_o;
 
 //
 // WB master i/f connecting target
@@ -91,7 +86,6 @@ output			t0_wb_we_o;
 output	[`TC_DW-1:0]	t0_wb_dat_o;
 input	[`TC_DW-1:0]	t0_wb_dat_i;
 input			t0_wb_ack_i;
-input			t0_wb_err_i;
 
 //
 // Internal wires & registers
@@ -111,21 +105,21 @@ reg	[2:0]		req_r;
 //
 assign i4_in = {i4_wb_cyc_i, i4_wb_stb_i, i4_wb_adr_i,
 		i4_wb_sel_i, i4_wb_we_i, i4_wb_dat_i};
-assign {i4_wb_dat_o, i4_wb_ack_o, i4_wb_err_o} = i4_out;
+assign {i4_wb_dat_o, i4_wb_ack_o} = i4_out;
 
 //
 // Group WB initiator 5 i/f inputs and outputs
 //
 assign i5_in = {i5_wb_cyc_i, i5_wb_stb_i, i5_wb_adr_i,
 		i5_wb_sel_i, i5_wb_we_i, i5_wb_dat_i};
-assign {i5_wb_dat_o, i5_wb_ack_o, i5_wb_err_o} = i5_out;
+assign {i5_wb_dat_o, i5_wb_ack_o} = i5_out;
 
 //
 // Group WB target 0 i/f inputs and outputs
 //
 assign {t0_wb_cyc_o, t0_wb_stb_o, t0_wb_adr_o,
 		t0_wb_sel_o, t0_wb_we_o, t0_wb_dat_o} = t0_out;
-assign t0_in = {t0_wb_dat_i, t0_wb_ack_i, t0_wb_err_i};
+assign t0_in = {t0_wb_dat_i, t0_wb_ack_i};
 
 //
 // Assign to WB initiator i/f outputs

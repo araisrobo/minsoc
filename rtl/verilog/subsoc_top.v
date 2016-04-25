@@ -74,27 +74,12 @@ module subsoc_top
   output  [WB_DW/8-1:0]     wb_ssif_sel_o,
   output                    wb_ssif_we_o,
   input   [WB_DW-1:0]       wb_ssif_dat_i,
-  input                     wb_ssif_ack_i,
-  input                     wb_ssif_err_i
-
+  input                     wb_ssif_ack_i
 );
 
 //
 // Internal wires
 //
-
-//
-// Debug core master i/f wires
-//
-wire 	[31:0]		wb_dm_adr_o;
-wire 	[31:0] 		wb_dm_dat_i;
-wire 	[31:0] 		wb_dm_dat_o;
-wire 	[3:0]		wb_dm_sel_o;
-wire			wb_dm_we_o;
-wire 			wb_dm_stb_o;
-wire			wb_dm_cyc_o;
-wire			wb_dm_ack_i;
-wire			wb_dm_err_i;
 
 //
 // Debug <-> RISC wires
@@ -121,7 +106,6 @@ wire 	[31:0]		wb_rim_dat_i;
 wire 	[31:0]		wb_rim_dat_o;
 wire 	[3:0]		wb_rim_sel_o;
 wire			wb_rim_ack_i;
-wire			wb_rim_err_i;
 wire			wb_rim_rty_i = 1'b0;
 wire			wb_rim_we_o;
 wire			wb_rim_stb_o;
@@ -145,7 +129,6 @@ wire 	[31:0]		wb_rdm_dat_i;
 wire 	[31:0]		wb_rdm_dat_o;
 wire 	[3:0]		wb_rdm_sel_o;
 wire			wb_rdm_ack_i;
-wire			wb_rdm_err_i;
 wire			wb_rdm_rty_i = 1'b0;
 wire			wb_rdm_we_o;
 wire			wb_rdm_stb_o;
@@ -165,27 +148,6 @@ wire	[`OR1200_PIC_INTS-1:0]		pic_ints;
 wire                                    sig_tick;
 
 //
-// SPI controller slave i/f wires
-//
-wire 	[31:0]		wb_sp_dat_i;
-wire 	[31:0]		wb_sp_dat_o;
-wire 	[31:0]		wb_sp_adr_i;
-wire 	[3:0]		wb_sp_sel_i;
-wire			wb_sp_we_i;
-wire			wb_sp_cyc_i;
-wire			wb_sp_stb_i;
-wire			wb_sp_ack_o;
-wire			wb_sp_err_o;
-
-//
-// SPI controller external i/f wires
-//
-wire spi_flash_mosi;
-wire spi_flash_miso;
-wire spi_flash_sclk;
-wire [1:0] spi_flash_ss;
-
-//
 // SRAM controller slave i/f wires
 //
 wire 	[31:0]		wb_ss_dat_i;
@@ -196,52 +158,6 @@ wire			wb_ss_we_i;
 wire			wb_ss_cyc_i;
 wire			wb_ss_stb_i;
 wire			wb_ss_ack_o;
-wire			wb_ss_err_o;
-
-//
-// Ethernet core master i/f wires
-//
-wire 	[31:0]		wb_em_adr_o;
-wire 	[31:0] 		wb_em_dat_i;
-wire 	[31:0] 		wb_em_dat_o;
-wire 	[3:0]		wb_em_sel_o;
-wire			wb_em_we_o;
-wire 			wb_em_stb_o;
-wire			wb_em_cyc_o;
-wire			wb_em_ack_i;
-wire			wb_em_err_i;
-
-//
-// Ethernet core slave i/f wires
-//
-wire	[31:0]		wb_es_dat_i;
-wire	[31:0]		wb_es_dat_o;
-wire	[31:0]		wb_es_adr_i;
-wire	[3:0]		wb_es_sel_i;
-wire			wb_es_we_i;
-wire			wb_es_cyc_i;
-wire			wb_es_stb_i;
-wire			wb_es_ack_o;
-wire			wb_es_err_o;
-
-//
-// Ethernet external i/f wires
-//
-wire			eth_mdo;
-wire			eth_mdoe;
-
-//
-// UART16550 core slave i/f wires
-//
-wire	[31:0]		wb_us_dat_i;
-wire	[31:0]		wb_us_dat_o;
-wire	[31:0]		wb_us_adr_i;
-wire	[3:0]		wb_us_sel_i;
-wire			wb_us_we_i;
-wire			wb_us_cyc_i;
-wire			wb_us_stb_i;
-wire			wb_us_ack_o;
-wire			wb_us_err_o;
 
 //
 // SFIFO_IF slave i/f wires (sfifoS: sfifo Slave)
@@ -254,7 +170,6 @@ wire			wb_sfifos_we_i;
 wire			wb_sfifos_cyc_i;
 wire			wb_sfifos_stb_i;
 wire			wb_sfifos_ack_o;
-wire			wb_sfifos_err_o;
 
 // SSIF
 wire    [31:0]          wb_ssif_adr;
@@ -267,14 +182,6 @@ wire                    wb_rst;
 
 assign wb_clk = clk;
 assign wb_rst = reset;
-
-//
-// Unused WISHBONE signals
-//
-assign wb_us_err_o = 1'b0;
-assign wb_fs_err_o = 1'b0;
-assign wb_sp_err_o = 1'b0;
-assign wb_sfifos_err_o = 1'b0;
 
 //
 // Unused interrupts
@@ -310,12 +217,6 @@ wire test_logic_reset;
 assign dbg_we = 0;
 assign dbg_stb = 0;
 assign dbg_stall = 0;
-assign wb_dm_cyc_o = 1'b0;
-assign wb_dm_stb_o = 1'b0;
-assign wb_dm_adr_o = 32'h0000_0000;
-assign wb_dm_sel_o = 4'b0000;
-assign wb_dm_we_o  = 1'b0;
-assign wb_dm_dat_o = 32'h0000_0000;
 
 //
 // Instantiation of the OR1200 RISC
@@ -344,7 +245,6 @@ or1200_top or1200_top (
 	.iwb_dat_o	( wb_rim_dat_o ),
 	.iwb_sel_o	( wb_rim_sel_o ),
 	.iwb_ack_i	( wb_rif_ack_i ),
-	.iwb_err_i	( wb_rim_err_i ),
 	.iwb_rty_i	( wb_rim_rty_i ),
 	.iwb_we_o	( wb_rim_we_o  ),
 	.iwb_stb_o	( wb_rim_stb_o ),
@@ -365,7 +265,6 @@ or1200_top or1200_top (
 	.dwb_dat_o	( wb_rdm_dat_o ),
 	.dwb_sel_o	( wb_rdm_sel_o ),
 	.dwb_ack_i	( wb_rdm_ack_i ),
-	.dwb_err_i	( wb_rdm_err_i ),
 	.dwb_rty_i	( wb_rdm_rty_i ),
 	.dwb_we_o	( wb_rdm_we_o  ),
 	.dwb_stb_o	( wb_rdm_stb_o ),
@@ -430,7 +329,6 @@ onchip_ram_top (
   .wb_cyc_i	( wb_ss_cyc_i ),
   .wb_stb_i	( wb_ss_stb_i ),
   .wb_ack_o	( wb_ss_ack_o ),
-  .wb_err_o	( wb_ss_err_o ),
 
   // OR32 PROG interface
   .prog_addr_i  (or32_prog_addr_i[`MEMORY_ADR_WIDTH+1:2]),  // addr for OR32_PROG
@@ -513,86 +411,10 @@ sfifo_if_top #(
   .dac_3_o            ( dac_3_o )
 );
 
-//
-// Instantiation of the UART16550
-//
-// `ifdef UART
-// `else
-assign wb_us_dat_o = 32'h0000_0000;
-assign wb_us_ack_o = 1'b0;
-
+// interrupt for UART
 assign pic_ints[`APP_INT_UART] = 1'b0;
-// `endif
-
-//
-// Instantiation of the Ethernet 10/100 MAC
-//
-`ifdef ETHERNET
-eth_top eth_top (
-
-	// WISHBONE common
-	.wb_clk_i	( wb_clk ),
-	.wb_rst_i	( wb_rst ),
-
-	// WISHBONE slave
-	.wb_dat_i	( wb_es_dat_i ),
-	.wb_dat_o	( wb_es_dat_o ),
-	.wb_adr_i	( wb_es_adr_i[11:2] ),
-	.wb_sel_i	( wb_es_sel_i ),
-	.wb_we_i	( wb_es_we_i  ),
-	.wb_cyc_i	( wb_es_cyc_i ),
-	.wb_stb_i	( wb_es_stb_i ),
-	.wb_ack_o	( wb_es_ack_o ),
-	.wb_err_o	( wb_es_err_o ), 
-
-	// WISHBONE master
-	.m_wb_adr_o	( wb_em_adr_o ),
-	.m_wb_sel_o	( wb_em_sel_o ),
-	.m_wb_we_o	( wb_em_we_o  ), 
-	.m_wb_dat_o	( wb_em_dat_o ),
-	.m_wb_dat_i	( wb_em_dat_i ),
-	.m_wb_cyc_o	( wb_em_cyc_o ), 
-	.m_wb_stb_o	( wb_em_stb_o ),
-	.m_wb_ack_i	( wb_em_ack_i ),
-	.m_wb_err_i	( wb_em_err_i ), 
-
-	// TX
-	.mtx_clk_pad_i	( eth_tx_clk ),
-	.mtxd_pad_o	( eth_txd ),
-	.mtxen_pad_o	( eth_tx_en ),
-	.mtxerr_pad_o	( eth_tx_er ),
-
-	// RX
-	.mrx_clk_pad_i	( eth_rx_clk ),
-	.mrxd_pad_i	( eth_rxd ),
-	.mrxdv_pad_i	( eth_rx_dv ),
-	.mrxerr_pad_i	( eth_rx_er ),
-	.mcoll_pad_i	( eth_col ),
-	.mcrs_pad_i	( eth_crs ),
-  
-	// MIIM
-	.mdc_pad_o	( eth_mdc ),
-	.md_pad_i	( eth_mdio ),
-	.md_pad_o	( eth_mdo ),
-	.md_padoe_o	( eth_mdoe ),
-
-	// Interrupt
-	.int_o		( pic_ints[`APP_INT_ETH] )
-);
-`else
-assign wb_es_dat_o = 32'h0000_0000;
-assign wb_es_ack_o = 1'b0;
-assign wb_es_err_o = 1'b0;
-
-assign wb_em_adr_o = 32'h0000_0000;
-assign wb_em_sel_o = 4'h0;
-assign wb_em_we_o = 1'b0;
-assign wb_em_dat_o = 32'h0000_0000;
-assign wb_em_cyc_o = 1'b0;
-assign wb_em_stb_o = 1'b0;
-
+// interrupt for ETH
 assign pic_ints[`APP_INT_ETH] = 1'b0;
-`endif
 
 //
 // Instantiation of the Traffic COP
@@ -619,7 +441,6 @@ subsoc_tc_top #(
 	.i4_wb_dat_i	( wb_rdm_dat_o ),
 	.i4_wb_dat_o	( wb_rdm_dat_i ),
 	.i4_wb_ack_o	( wb_rdm_ack_i ),
-	.i4_wb_err_o	( wb_rdm_err_i ),
 
 	// WISHBONE Initiator 5   (rim: or1200 instruction master)
 	.i5_wb_cyc_i	( wb_rim_cyc_o ),
@@ -630,7 +451,6 @@ subsoc_tc_top #(
 	.i5_wb_dat_i	( wb_rim_dat_o ),
 	.i5_wb_dat_o	( wb_rim_dat_i ),
 	.i5_wb_ack_o	( wb_rim_ack_i ),
-	.i5_wb_err_o	( wb_rim_err_i ),
 
 	// WISHBONE Target 0 (ss: sram controller, 0x00)
 	.t0_wb_cyc_o	( wb_ss_cyc_i ),
@@ -641,7 +461,6 @@ subsoc_tc_top #(
 	.t0_wb_dat_o	( wb_ss_dat_i ),
 	.t0_wb_dat_i	( wb_ss_dat_o ),
 	.t0_wb_ack_i	( wb_ss_ack_o ),
-	.t0_wb_err_i	( wb_ss_err_o ),
 
 	// WISHBONE Target 1 (sfifos: sync fifo slave, 0x9d)
 	.t1_wb_cyc_o	( wb_sfifos_cyc_i ),
@@ -652,7 +471,6 @@ subsoc_tc_top #(
 	.t1_wb_dat_o	( wb_sfifos_dat_i ),
 	.t1_wb_dat_i	( wb_sfifos_dat_o ),
 	.t1_wb_ack_i	( wb_sfifos_ack_o ),
-	.t1_wb_err_i	( wb_sfifos_err_o ),
 	
 	// WISHBONE Target 2 (ssifs: SSIF Slave, 0x9e)
 	.t2_wb_cyc_o	( wb_ssif_cyc_o ),
@@ -662,8 +480,7 @@ subsoc_tc_top #(
 	.t2_wb_we_o	( wb_ssif_we_o  ),
 	.t2_wb_dat_o	( wb_ssif_dat_o ),
 	.t2_wb_dat_i	( wb_ssif_dat_i ),
-	.t2_wb_ack_i	( wb_ssif_ack_i ),
-	.t2_wb_err_i	( wb_ssif_err_i )
+	.t2_wb_ack_i	( wb_ssif_ack_i )
 );
 
 //initial begin
