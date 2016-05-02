@@ -54,9 +54,14 @@
 
 module subsoc_onchip_ram_top ( 
   wb_clk_i, wb_rst_i, 
- 
+  
+  // for DARA-MEM
   wb_dat_i, wb_dat_o, wb_adr_i, wb_sel_i, wb_we_i, wb_cyc_i, 
-  wb_stb_i, wb_ack_o, /* wb_err_o,*/
+  wb_stb_i, wb_ack_o,
+
+  // for INSTR-MEM
+  wb_rim_dat_i, wb_rim_dat_o, wb_rim_adr_i, wb_rim_sel_i, wb_rim_we_i, wb_rim_cyc_i, 
+  wb_rim_stb_i, wb_rim_ack_o,
   
   // OR32 PROG interface
   prog_addr_i,    // addr for OR32_PROG
@@ -88,8 +93,16 @@ input           wb_we_i;
 input           wb_cyc_i; 
 input           wb_stb_i; 
 output reg      wb_ack_o; 
-//bypass_wb_err: output reg      wb_err_o; 
-  
+
+input  [31:0]   wb_rim_dat_i; 
+output [31:0]   wb_rim_dat_o; 
+input  [31:0]   wb_rim_adr_i; 
+input  [3:0]    wb_rim_sel_i; 
+input           wb_rim_we_i; 
+input           wb_rim_cyc_i; 
+input           wb_rim_stb_i; 
+output reg      wb_rim_ack_o; 
+
 // OR32 PROG interface
 input  [RAM_AW+1:2]   prog_addr_i;      // addr for OR32_PROG
 input  [RAM_DW-1:0]   prog_data_i;      // data for OR32_PROG
@@ -101,38 +114,22 @@ input                 prog_en_i;        // (1)write addr/data to OR32
 wire        we; 
 wire [3:0]  be_i; 
 wire [31:0] wb_dat_o; 
-// reg    ack_we; 
-// reg    ack_re; 
 wire        wb_ack;
-//bypass wb_err: wire        wb_err;
+wire [RAM_AW+1:2]   addr_b;      // addr for SRAM-PORT-B (prog and rim)
 
 // 
 // Aliases and simple assignments 
 // 
-// assign wb_ack_o = ack_re | ack_we; 
-// assign wb_err_o = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:RAM_AW+2]);  // If Access to > (8-bit leading prefix ignored) 
 assign we = wb_cyc_i & wb_stb_i & wb_we_i & (|wb_sel_i[3:0]); 
 assign be_i[0] = wb_cyc_i & wb_stb_i & wb_sel_i[0]; 
 assign be_i[1] = wb_cyc_i & wb_stb_i & wb_sel_i[1]; 
 assign be_i[2] = wb_cyc_i & wb_stb_i & wb_sel_i[2]; 
 assign be_i[3] = wb_cyc_i & wb_stb_i & wb_sel_i[3]; 
 
-//bypass_wb_err: // 
-//bypass_wb_err: // WB error
-//bypass_wb_err: // 
-//bypass_wb_err: assign wb_err = wb_cyc_i & wb_stb_i & (|wb_adr_i[23:RAM_AW+2]);  // If Access to > (8-bit leading prefix ignored) 
-//bypass_wb_err: always @ (posedge wb_clk_i) 
-//bypass_wb_err: begin 
-//bypass_wb_err: if (wb_rst_i) 
-//bypass_wb_err:     wb_err_o <= 1'b0; 
-//bypass_wb_err: else
-//bypass_wb_err:     wb_err_o <= #1 (wb_err); 
-//bypass_wb_err: end 
- 
 // 
 // WB acknowledge 
 // 
-assign wb_ack = (wb_cyc_i & wb_stb_i /* & ~wb_err */ & ~wb_ack_o);
+assign wb_ack = (wb_cyc_i & wb_stb_i & ~wb_ack_o);
 always @ (posedge wb_clk_i) 
 begin 
 if (wb_rst_i) 
@@ -140,6 +137,19 @@ if (wb_rst_i)
 else
     wb_ack_o <= #1 (wb_ack); 
 end 
+
+// 
+// WB acknowledge 
+// 
+assign wb_rim_ack = (wb_rim_cyc_i & wb_rim_stb_i & ~wb_rim_ack_o);
+always @ (posedge wb_clk_i) 
+begin 
+if (wb_rst_i) 
+    wb_rim_ack_o <= 1'b0; 
+else
+    wb_rim_ack_o <= #1 (wb_rim_ack); 
+end 
+assign addr_b = prog_en_i ? prog_addr_i : wb_rim_adr_i[RAM_AW+1:2];
 
     subsoc_onchip_ram #(
         .AW(RAM_AW)
@@ -156,12 +166,12 @@ end
         .ce     (be_i[0]),
         
         // Port B
-        .addr_b (prog_addr_i), 
+        .addr_b (addr_b), 
         .di_b   (prog_data_i[7:0]), 
-        .doq_b  (), 
+        .doq_b  (wb_rim_dat_o[7:0]), 
         .we_b   (prog_en_i), 
         .oe_b   (1'b1),
-        .ce_b   (prog_en_i)
+        .ce_b   (1'b1)
     ); 
 
     subsoc_onchip_ram #(
@@ -179,12 +189,12 @@ end
         .ce     (be_i[1]),
         
         // Port B
-        .addr_b (prog_addr_i), 
+        .addr_b (addr_b), 
         .di_b   (prog_data_i[15:8]), 
-        .doq_b  (), 
+        .doq_b  (wb_rim_dat_o[15:8]), 
         .we_b   (prog_en_i), 
         .oe_b   (1'b1),
-        .ce_b   (prog_en_i)
+        .ce_b   (1'b1)
     ); 
 
     subsoc_onchip_ram #(
@@ -202,12 +212,12 @@ end
         .ce     (be_i[2]),
         
         // Port B
-        .addr_b (prog_addr_i), 
+        .addr_b (addr_b), 
         .di_b   (prog_data_i[23:16]), 
-        .doq_b  (), 
+        .doq_b  (wb_rim_dat_o[23:16]), 
         .we_b   (prog_en_i), 
         .oe_b   (1'b1),
-        .ce_b   (prog_en_i)
+        .ce_b   (1'b1)
     ); 
     
     subsoc_onchip_ram #(
@@ -225,12 +235,12 @@ end
         .ce     (be_i[3]),
         
         // Port B
-        .addr_b (prog_addr_i), 
+        .addr_b (addr_b), 
         .di_b   (prog_data_i[31:24]), 
-        .doq_b  (), 
+        .doq_b  (wb_rim_dat_o[31:24]), 
         .we_b   (prog_en_i), 
         .oe_b   (1'b1),
-        .ce_b   (prog_en_i)
+        .ce_b   (1'b1)
     ); 
 
 endmodule 

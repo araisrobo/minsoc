@@ -109,8 +109,6 @@ wire			wb_rim_ack_i;
 wire			wb_rim_rty_i = 1'b0;
 wire			wb_rim_we_o;
 wire			wb_rim_stb_o;
-wire	[31:0]		wb_rif_dat_i;
-wire			wb_rif_ack_i;
 `ifdef OR1200_WB_CAB
 wire  			wb_rim_cab;	// indicates consecutive address burst
 `endif
@@ -195,10 +193,6 @@ assign pic_ints[`APP_INT_PS2] = 'b0;
 // SSIF
 assign wb_ssif_adr_o = wb_ssif_adr[WB_SSIF_AW-1:2];
 
-assign wb_rif_dat_i = wb_rim_dat_i;
-assign wb_rif_ack_i = wb_rim_ack_i;
-
-
 //
 // TAP<->dbg_interface
 //      
@@ -241,10 +235,10 @@ or1200_top or1200_top (
 	.iwb_rst_i	( wb_rst ),
 	.iwb_cyc_o	( wb_rim_cyc_o ),
 	.iwb_adr_o	( wb_rim_adr_o ),
-	.iwb_dat_i	( wb_rif_dat_i ),
+	.iwb_dat_i	( wb_rim_dat_i ),
 	.iwb_dat_o	( wb_rim_dat_o ),
 	.iwb_sel_o	( wb_rim_sel_o ),
-	.iwb_ack_i	( wb_rif_ack_i ),
+	.iwb_ack_i	( wb_rim_ack_i ),
 	.iwb_rty_i	( wb_rim_rty_i ),
 	.iwb_we_o	( wb_rim_we_o  ),
 	.iwb_stb_o	( wb_rim_stb_o ),
@@ -329,6 +323,16 @@ onchip_ram_top (
   .wb_cyc_i	( wb_ss_cyc_i ),
   .wb_stb_i	( wb_ss_stb_i ),
   .wb_ack_o	( wb_ss_ack_o ),
+  
+  // WISHBONE slave
+  .wb_rim_dat_i	( wb_rim_dat_o ),
+  .wb_rim_dat_o	( wb_rim_dat_i ),
+  .wb_rim_adr_i	( wb_rim_adr_o ),
+  .wb_rim_sel_i	( wb_rim_sel_o ),
+  .wb_rim_we_i	( wb_rim_we_o  ),
+  .wb_rim_cyc_i	( wb_rim_cyc_o ),
+  .wb_rim_stb_i	( wb_rim_stb_o ),
+  .wb_rim_ack_o	( wb_rim_ack_i ),
 
   // OR32 PROG interface
   .prog_addr_i  (or32_prog_addr_i[`MEMORY_ADR_WIDTH+1:2]),  // addr for OR32_PROG
@@ -419,7 +423,7 @@ assign pic_ints[`APP_INT_ETH] = 1'b0;
 //
 // Instantiation of the Traffic COP
 //
-subsoc_tc_top #(
+si_to_3t #(
           .addr_prefix_w    (`APP_ADDR_PREFIX_W       ),
           .addr_suffix_w    (`APP_ADDR_SUFFIX_W       ),
 	  .t0_addr_prefix   (`APP_ADDR_PREFIX_SRAM    ),
@@ -428,29 +432,15 @@ subsoc_tc_top #(
 	  .t2_addr_suffix   (`ACCEL_ADDR_SUFFIX_SSIF  )
 	) tc_top (
 
-	// WISHBONE common
-	.wb_clk_i	( wb_clk ),
-	.wb_rst_i	( wb_rst ),
-
 	// WISHBONE Initiator 4   (rdm: or1200 data master)
-	.i4_wb_cyc_i	( wb_rdm_cyc_o ),
-	.i4_wb_stb_i	( wb_rdm_stb_o ),
-	.i4_wb_adr_i	( wb_rdm_adr_o ),
-	.i4_wb_sel_i	( wb_rdm_sel_o ),
-	.i4_wb_we_i	( wb_rdm_we_o  ),
-	.i4_wb_dat_i	( wb_rdm_dat_o ),
-	.i4_wb_dat_o	( wb_rdm_dat_i ),
-	.i4_wb_ack_o	( wb_rdm_ack_i ),
-
-	// WISHBONE Initiator 5   (rim: or1200 instruction master)
-	.i5_wb_cyc_i	( wb_rim_cyc_o ),
-	.i5_wb_stb_i	( wb_rim_stb_o ),
-	.i5_wb_adr_i	( wb_rim_adr_o ),
-	.i5_wb_sel_i	( wb_rim_sel_o ),
-	.i5_wb_we_i	( wb_rim_we_o  ),
-	.i5_wb_dat_i	( wb_rim_dat_o ),
-	.i5_wb_dat_o	( wb_rim_dat_i ),
-	.i5_wb_ack_o	( wb_rim_ack_i ),
+	.i0_wb_cyc_i	( wb_rdm_cyc_o ),
+	.i0_wb_stb_i	( wb_rdm_stb_o ),
+	.i0_wb_adr_i	( wb_rdm_adr_o ),
+	.i0_wb_sel_i	( wb_rdm_sel_o ),
+	.i0_wb_we_i	( wb_rdm_we_o  ),
+	.i0_wb_dat_i	( wb_rdm_dat_o ),
+	.i0_wb_dat_o	( wb_rdm_dat_i ),
+	.i0_wb_ack_o	( wb_rdm_ack_i ),
 
 	// WISHBONE Target 0 (ss: sram controller, 0x00)
 	.t0_wb_cyc_o	( wb_ss_cyc_i ),
