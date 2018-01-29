@@ -20,8 +20,7 @@
 `define SFIFO_ADC_AB        3'h5 
 `define SFIFO_ADC_CD        3'h6 
 `define SFIFO_ADC_EF        3'h7 
-//rt_cmd: `define SFIFO_RT_CMD        5'h10   // 0x40 ~ 0x43
-`define SFIFO_ADC_PRE_CMD   5'h10   // ADC_PREAMBLE(0x40 ~ 0x41) ADC_CMD(0x42 ~ 0x43)
+`define SFIFO_ADC_PRE_CMD   5'h10   // ADC_CMD(0x42 ~ 0x43)
 `define SFIFO_ESTOP_OUT_0   5'h12   // 0x48 ~ 0x4B 100_10..
 `define SFIFO_ESTOP_OUT_1   5'h13   // 0x4C ~ 0x4F 100_11..
 
@@ -47,7 +46,8 @@ module sfifo_if_top
   parameter           ADC_CMD_W     = 0,    // width for ADC PREAMBLE and CMD
   parameter           ADC_CH_W      = 0,
   parameter           ADC_W         = 0,    // width for ADC value
-  parameter           DAC_W         = 0     // width for DAC command
+  parameter           DAC_W         = 0,    // width for DAC command
+  parameter           DAC_CH_W      = 0     // width for DAC_CH
 )
 (
   // WISHBONE Interface
@@ -78,12 +78,8 @@ module sfifo_if_top
   // SFIFO_CTRL Interface (clk_250)
   input                             sfifo_bp_tick_i,
 
-//rt_cmd:  // RT_CMD Interface (clk_250)
-//rt_cmd:  output                            rt_cmd_rst_o,
-//rt_cmd:  input   [WB_DW-1:0]               rt_cmd_i,
-
-  // ADC_PREAMBLE and ADC_CMD registers (clk_500)
-  output  reg [ADC_CMD_W-1:0]       adc_pre_o,  // ADC_PREAMBLE
+  // ADC_CMD registers (clk_250)
+  output  reg                       adc_cmd_wr_o,
   output  reg [ADC_CMD_W-1:0]       adc_cmd_o,  // ADC_CMD
 
   // GPIO Interface (clk_250)
@@ -111,9 +107,6 @@ module sfifo_if_top
   output  reg [DAC_W-1:0]           dac_3_o
 );
 
-//rt_cmd: wire                rt_cmd_sel;
-//rt_cmd: reg                 rt_cmd_sel_s;
-//rt_cmd: reg [WB_DW-1:0]     rt_cmd_s;
 wire                adc_pre_cmd_sel;
 
 reg                 sfifo_bp_tick_s;
@@ -126,6 +119,7 @@ wire                sfifo_di_sel;
 wire                dout_0_wr_sel;
 wire                dout_1_wr_sel;
 wire                dout_2_wr_sel;
+//TODO: remove estop_out_0, which is replaced by RISC
 reg [WB_DW-1:0]     estop_out_0; // output value for ESTOP
 wire                estop_out_0_wr_sel;
 //TODO: reg [WB_DW-1:0]     estop_out_1; // output value for ESTOP
@@ -173,7 +167,6 @@ assign dout_2_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == 
 assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
 assign dac_wr_sel   = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:4] == `SFIFO_DAC_PREFIX);
 
-//rt_cmd: assign rt_cmd_sel   = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_RT_CMD);
 assign adc_pre_cmd_sel   = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ADC_PRE_CMD);
 
 //**********************************************************************************
@@ -266,21 +259,6 @@ always @(posedge wb_clk_i)
   else
     sfifo_rd_o <= sfifo_di_sel & (~sfifo_empty_i) & ~wb_ack_o; // (~wb_ack_o): prevent from reading sfifo twice
 
-//rt_cmd: // sync from clk_250 to clk_500
-//rt_cmd: always @ (posedge wb_clk_i)
-//rt_cmd:     if (wb_rst_i)
-//rt_cmd:         rt_cmd_s        <= 0;
-//rt_cmd:     else 
-//rt_cmd:         rt_cmd_s        <= rt_cmd_i;
-//
-//rt_cmd: // generate rt_cmd reset signal from clk_500 to clk_250
-//rt_cmd: assign rt_cmd_rst_o = rt_cmd_sel | rt_cmd_sel_s;
-//rt_cmd: always @ (posedge wb_clk_i)
-//rt_cmd:     if (wb_rst_i)
-//rt_cmd:         rt_cmd_sel_s    <= 0;
-//rt_cmd:     else 
-//rt_cmd:         rt_cmd_sel_s    <= rt_cmd_sel;
-
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
         adc_cmd_o[7:0]      <= 0;
@@ -297,17 +275,9 @@ always @ (posedge wb_clk_i)
 
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
-        adc_pre_o[7:0]      <= 8'hFF;
-    else if (adc_pre_cmd_sel & wb_sel_i[2]) begin   // 0x41->sel[2]
-        adc_pre_o[7:0]      <= wb_dat_i[23:16];
-    end
-
-always @ (posedge wb_clk_i)
-    if (wb_rst_i)
-        adc_pre_o[15:8]     <= 8'hFF;
-    else if (adc_pre_cmd_sel & wb_sel_i[3]) begin   // 0x40->sel[3]
-        adc_pre_o[15:8]     <= wb_dat_i[31:24];
-    end
+        adc_cmd_wr_o        <= 0;
+    else 
+        adc_cmd_wr_o        <= adc_pre_cmd_sel;
 
 // sync from clk_250 to clk_500
 always @ (posedge wb_clk_i)

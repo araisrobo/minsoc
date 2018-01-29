@@ -48,7 +48,7 @@ module subsoc_top
   input   [ADC_W-1:0]       adc_lo_i,
   input   [ADC_W-1:0]       adc_hi_i,
   output  [ADC_CH_W-2:0]    adc_ch_sel_o,
-  output  [ADC_CMD_W-1:0]   adc_pre_o,  // ADC_PREAMBLE
+  output                    adc_cmd_wr_o,
   output  [ADC_CMD_W-1:0]   adc_cmd_o,  // ADC_CMD
   
   // Digital to Analog Converter Outputs
@@ -405,7 +405,7 @@ sfifo_if_top #(
   .adc_lo_i           ( adc_lo_i ),
   .adc_hi_i           ( adc_hi_i ),
   .adc_ch_sel_o       ( adc_ch_sel_o ),
-  .adc_pre_o          ( adc_pre_o ),
+  .adc_cmd_wr_o       ( adc_cmd_wr_o ),
   .adc_cmd_o          ( adc_cmd_o ),
   
   // DAC output
