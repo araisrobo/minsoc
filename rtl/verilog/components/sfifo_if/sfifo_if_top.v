@@ -22,7 +22,6 @@
 `define SFIFO_ADC_EF        3'h7 
 `define SFIFO_ADC_PRE_CMD   5'h10   // ADC_CMD(0x42 ~ 0x43)
 `define SFIFO_ESTOP_OUT_0   5'h12   // 0x48 ~ 0x4B 100_10..
-`define SFIFO_ESTOP_OUT_1   5'h13   // 0x4C ~ 0x4F 100_11..
 
 `define SFIFO_DAC_PREFIX    3'b101      // 0x50 ~ 0x5F, DAC Ch0 ~ Ch3
 `define SFIFO_DAC_BASE      5'b101??    // 0x50 ~ 0x5F, DAC Ch0 ~ Ch3
@@ -30,9 +29,17 @@
 `define SFIFO_DAC_1         2'h1        // for 0x54
 `define SFIFO_DAC_2         2'h2        // for 0x58
 `define SFIFO_DAC_3         2'h3        // for 0x5C
+
 `define SFIFO_DOUT_0        5'h18   // 0x60 ~ 0x63 110_00..
 `define SFIFO_DOUT_1        5'h19   // 0x64 ~ 0x67 110_01..
 `define SFIFO_DOUT_2        5'h1A   // 0x68 ~ 0x6B 110_10..
+
+`define SFIFO_PWM_PREFIX    3'b111      // 0x70 ~ 0x7F, PWM Ch0 ~ Ch3
+`define SFIFO_PWM_BASE      5'b111??    // 0x70 ~ 0x7F, PWM Ch0 ~ Ch3
+`define SFIFO_PWM_0         2'h0        // for 0x70
+`define SFIFO_PWM_1         2'h1        // for 0x74
+`define SFIFO_PWM_2         2'h2        // for 0x78
+`define SFIFO_PWM_3         2'h3        // for 0x7C
 
 module sfifo_if_top
 #(
@@ -40,9 +47,7 @@ module sfifo_if_top
   parameter           WB_DW         = 32,
   parameter           WOU_DW        = 0,
   parameter           SFIFO_DW      = 16,   // data width for SYNC_FIFO
-  // fixed 80-IN, 64-OUT
-  // parameter           DIN_W         = 0,
-  // parameter           DOUT_W        = 0,
+  parameter           PWM_NUM       = 0,    // number of PWM port
   parameter           ADC_CMD_W     = 0,    // width for ADC PREAMBLE and CMD
   parameter           ADC_CH_W      = 0,
   parameter           ADC_W         = 0,    // width for ADC value
@@ -50,6 +55,7 @@ module sfifo_if_top
   parameter           DAC_CH_W      = 0     // width for DAC_CH
 )
 (
+  input                             clk_250,
   // WISHBONE Interface
   output  reg [WB_DW-1:0]           wb_dat_o,
   output  reg                       wb_ack_o,
@@ -83,6 +89,9 @@ module sfifo_if_top
   output  reg [ADC_CMD_W-1:0]       adc_cmd_o,  // ADC_CMD
 
   // GPIO Interface (clk_250)
+  // PWM
+  output      [PWM_NUM-1:0]         pwm_o,
+
   // SYNC_DOUT
   output  reg [WB_DW-1:0]           dout_0_o,   // [7:0]=>AR11.EXT, [31:8]=>internal-register-map
   output  reg [WB_DW-1:0]           dout_1_o,   // [63:32]=>AR15
@@ -122,16 +131,18 @@ wire                dout_2_wr_sel;
 //TODO: remove estop_out_0, which is replaced by RISC
 reg [WB_DW-1:0]     estop_out_0; // output value for ESTOP
 wire                estop_out_0_wr_sel;
-//TODO: reg [WB_DW-1:0]     estop_out_1; // output value for ESTOP
-//TODO: wire                estop_out_1_wr_sel;
-
-// signals for ADC input
-reg [ADC_W-1:0]     adc_lo;
-reg [ADC_W-1:0]     adc_hi;
 
 // signals for DAC command
 reg [DAC_W-1:0]     dac;  // reading
 wire                dac_wr_sel;
+
+// signals for PWM command
+parameter integer   PWM_W = 32; // {freq[15:0], duty[15:0]}
+wire                pwm_wr_sel;
+reg [PWM_W-1:0]     pwm_0;      // {freq[15:0], duty[15:0]}
+reg [PWM_W-1:0]     pwm_1;
+reg [PWM_W-1:0]     pwm_2;
+reg [PWM_W-1:0]     pwm_3;
 
 // signals for MAILBOX
 wire              mbox_wr_sel;
@@ -147,7 +158,6 @@ parameter         MBOX_IDLE   = 1'b0,
 initial begin
     // initialized value right after FPGA configuration
     estop_out_0 = 0;
-    //TODO: estop_out_1 = 0;
     dout_0_o = 0;
     dout_1_o = 0;
     dout_2_o = 0;
@@ -160,12 +170,12 @@ assign sfifo_di_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DI);
 // wb_sel_i[1]: byte 2
 // wb_sel_i[0]: byte 3
 assign estop_out_0_wr_sel = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ESTOP_OUT_0);
-assign estop_out_1_wr_sel = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ESTOP_OUT_1);
 assign dout_0_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT_0);
 assign dout_1_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT_1);
 assign dout_2_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_DOUT_2);
 assign mbox_wr_sel  = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:2] == `MAILBOX_OBUF);
 assign dac_wr_sel   = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:4] == `SFIFO_DAC_PREFIX);
+assign pwm_wr_sel   = wb_cyc_i & wb_stb_i & wb_we_i & (wb_adr_i[WB_AW-1:4] == `SFIFO_PWM_PREFIX);
 
 assign adc_pre_cmd_sel   = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1:2] == `SFIFO_ADC_PRE_CMD);
 
@@ -182,8 +192,6 @@ assign adc_rd_sel = wb_cyc_i & wb_stb_i & (wb_adr_i[WB_AW-1] == 1'b1);
 // End of simulation code.
 //**********************************************************************************
 
-
-
 // Wb acknowledge
 always @(posedge wb_clk_i)
 begin
@@ -198,21 +206,6 @@ begin
 end
 
 assign adc_ch_sel_o = wb_adr_i[ADC_CH_W:2];
-// // mux for ADC inputs
-// always @(*)
-// begin
-//   casez ({wb_adr_i[WB_AW-3:2]})  // synopsys parallel_case
-//     `SFIFO_ADC_01:  begin adc_lo <= adc_0_i;  adc_hi <= adc_1_i;  end
-//     `SFIFO_ADC_23:  begin adc_lo <= adc_2_i;  adc_hi <= adc_3_i;  end
-//     `SFIFO_ADC_45:  begin adc_lo <= adc_4_i;  adc_hi <= adc_5_i;  end
-//     `SFIFO_ADC_67:  begin adc_lo <= adc_6_i;  adc_hi <= adc_7_i;  end
-//     `SFIFO_ADC_89:  begin adc_lo <= adc_8_i;  adc_hi <= adc_9_i;  end
-//     `SFIFO_ADC_AB:  begin adc_lo <= adc_10_i; adc_hi <= adc_11_i; end
-//     `SFIFO_ADC_CD:  begin adc_lo <= adc_12_i; adc_hi <= adc_13_i; end
-//     `SFIFO_ADC_EF:  begin adc_lo <= adc_14_i; adc_hi <= adc_15_i; end
-//     default:        begin adc_lo <= 'bx;      adc_hi <= 'bx; end
-//   endcase
-// end
 
 // mux for DAC commands, WB_AW is 7
 always @(*)
@@ -477,34 +470,6 @@ always @ (posedge wb_clk_i)
         estop_out_0[31:24]     <= wb_dat_i[31:24];
     end
 
-//TODO: always @ (posedge wb_clk_i)
-//TODO:     if (wb_rst_i)
-//TODO:         estop_out_1[7:0]     <= 0;
-//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[0]) begin
-//TODO:         estop_out_1[7:0]     <= wb_dat_i[7:0];
-//TODO:     end
-//TODO: 
-//TODO: always @ (posedge wb_clk_i)
-//TODO:     if (wb_rst_i)
-//TODO:         estop_out_1[15:8]     <= 0;
-//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[1]) begin
-//TODO:         estop_out_1[15:8]     <= wb_dat_i[15:8];
-//TODO:     end
-//TODO: 
-//TODO: always @ (posedge wb_clk_i)
-//TODO:     if (wb_rst_i)
-//TODO:         estop_out_1[23:16]     <= 0;
-//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[2]) begin
-//TODO:         estop_out_1[23:16]     <= wb_dat_i[23:16];
-//TODO:     end
-//TODO: 
-//TODO: always @ (posedge wb_clk_i)
-//TODO:     if (wb_rst_i)
-//TODO:         estop_out_1[31:24]     <= 0;
-//TODO:     else if (estop_out_1_wr_sel & wb_sel_i[3]) begin
-//TODO:         estop_out_1[31:24]     <= wb_dat_i[31:24];
-//TODO:     end
-
 always @ (posedge wb_clk_i)
     if (wb_rst_i)
         dac_0_o             <= 0;   // NOP
@@ -532,5 +497,62 @@ always @ (posedge wb_clk_i)
     else if (dac_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_DAC_3)) begin
         dac_3_o             <= wb_dat_i[DAC_W-1:0];
     end
+
+    
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        pwm_0               <= 0;   // NOP
+    else if (pwm_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_PWM_0)) begin
+        pwm_0               <= wb_dat_i[PWM_W-1:0];
+    end
+  
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        pwm_1               <= 0;   // NOP
+    else if (pwm_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_PWM_1)) begin
+        pwm_1               <= wb_dat_i[PWM_W-1:0];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        pwm_2               <= 0;   // NOP
+    else if (pwm_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_PWM_2)) begin
+        pwm_2               <= wb_dat_i[PWM_W-1:0];
+    end
+
+always @ (posedge wb_clk_i)
+    if (wb_rst_i)
+        pwm_3               <= 0;   // NOP
+    else if (pwm_wr_sel & (wb_adr_i[WB_AW-4:2] == `SFIFO_PWM_3)) begin
+        pwm_3               <= wb_dat_i[PWM_W-1:0];
+    end
+
+pwm #(.PWM_W (PWM_W)) pwm0 (
+    .clk        (clk_250), // clk_250, 25MHz
+    .rst        (wb_rst_i),
+    .pwm_o      (pwm_o[0]),
+    .pwm_i      (pwm_0)     // pwm registers {freq[15:0], duty[15:0]}
+);
+
+pwm #(.PWM_W (PWM_W)) pwm1 (
+    .clk        (clk_250), // clk_250, 25MHz
+    .rst        (wb_rst_i),
+    .pwm_o      (pwm_o[1]),
+    .pwm_i      (pwm_1)     // pwm registers {freq[15:0], duty[15:0]}
+);
+
+pwm #(.PWM_W (PWM_W)) pwm2 (
+    .clk        (clk_250), // clk_250, 25MHz
+    .rst        (wb_rst_i),
+    .pwm_o      (pwm_o[2]),
+    .pwm_i      (pwm_2)     // pwm registers {freq[15:0], duty[15:0]}
+);
+
+pwm #(.PWM_W (PWM_W)) pwm3 (
+    .clk        (clk_250), // clk_250, 25MHz
+    .rst        (wb_rst_i),
+    .pwm_o      (pwm_o[3]),
+    .pwm_i      (pwm_3)     // pwm registers {freq[15:0], duty[15:0]}
+);
 
 endmodule

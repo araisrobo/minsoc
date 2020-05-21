@@ -7,6 +7,7 @@ module subsoc_top
   parameter           WB_SSIF_AW      = 0,
   parameter           WB_DW           = 0,
   parameter           WOU_DW          = 0,
+  parameter           PWM_NUM         = 0,    // number of PWM port
   parameter           ADC_CMD_W       = 0,
   parameter           ADC_CH_W        = 0,
   parameter           ADC_W           = 0,
@@ -14,6 +15,7 @@ module subsoc_top
 )
 (
   input               clk,
+  input               clk_250,
   input               reset,
 
   // or32 PROG interface
@@ -33,6 +35,9 @@ module subsoc_top
 //rt_cmd:  input   [WB_DW-1:0]       rt_cmd_i,
 
   // GPIO Interface (clk_250)
+  // PWM
+  output  [PWM_NUM-1:0]     pwm_o,
+
   // SYNC_DOUT
   output  [WB_DW-1:0]       dout_0_o,
   output  [WB_DW-1:0]       dout_1_o,
@@ -349,16 +354,17 @@ sfifo_if_top #(
   .WB_DW              ( 32        ),
   .WOU_DW             ( WOU_DW    ),  // WOU data bus width
   .SFIFO_DW           ( SFIFO_DW  ),  // data width for SYNC_FIFO
+  .PWM_NUM            ( PWM_NUM   ),  // number of PWM port
   .ADC_CMD_W          ( ADC_CMD_W ),  // ADC_PREAMBLE, ADC_CMD
   .ADC_CH_W           ( ADC_CH_W  ),  // width for ADC channel select signal
   .ADC_W              ( ADC_W     ),  // width for ADC value
   .DAC_W              ( DAC_W     )   // width for DAC command
 ) sfifo_if_top (
-
+  .clk_250            (clk_250),
   // WISHBONE common
   .wb_clk_i	      ( wb_clk ), 
   .wb_rst_i	      ( wb_rst ),
-
+  
   // WISHBONE slave
   .wb_adr_i	      ( wb_sfifos_adr_i[6:2] ),
   .wb_dat_i	      ( wb_sfifos_dat_i      ),
@@ -390,6 +396,7 @@ sfifo_if_top #(
 //rt_cmd:  .rt_cmd_i           ( rt_cmd_i            ),
   
   // GPIO Interface (clk_250)
+  .pwm_o              ( pwm_o    ),
   // SYNC_DOUT
   .dout_0_o           ( dout_0_o ),
   .dout_1_o           ( dout_1_o ),
